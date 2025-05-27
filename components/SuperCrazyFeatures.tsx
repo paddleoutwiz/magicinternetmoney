@@ -6,9 +6,9 @@ import PillSpinner from './PillSpinner'
 // Extend Window interface
 declare global {
   interface Window {
-    wizardMode: () => string
-    pillTime: () => string
-    loadTime: number
+    wizardMode?: () => string
+    pillTime?: () => string
+    loadTime?: number
   }
 }
 

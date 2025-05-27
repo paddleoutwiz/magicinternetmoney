@@ -137,7 +137,7 @@ export default function MatrixRain() {
   }, [intensity])
   
   // Handle pill clicks with larger hit area
-  const handleCanvasClick = (e: MouseEvent) => {
+  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current!.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
