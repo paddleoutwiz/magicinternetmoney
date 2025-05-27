@@ -1,0 +1,386 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==================== FONTS ==================== */
+@font-face {
+  font-family: 'Derp';
+  src: url('/assets/font/derp.woff2') format('woff2'),
+       url('/assets/font/derp.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Derp';
+  src: url('/assets/font/derp-a.woff2') format('woff2'),
+       url('/assets/font/derp-a.woff') format('woff');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
+
+/* ==================== BASE STYLES ==================== */
+@layer base {
+  * {
+    cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><defs><linearGradient id="wand" x1="0%25" y1="0%25" x2="100%25" y2="100%25"><stop offset="0%25" style="stop-color:%23f3ff00"/><stop offset="50%25" style="stop-color:%23f09f00"/><stop offset="100%25" style="stop-color:%239d4602"/></linearGradient></defs><g transform="rotate(-45 18 18)"><rect x="16" y="4" width="4" height="24" fill="url(%23wand)" stroke="%23040104" stroke-width="1"/><polygon points="18,4 14,0 18,-2 22,0" fill="%23f3ff00" stroke="%23040104" stroke-width="1"/><circle cx="14" cy="2" r="2" fill="%23fff" opacity="0.8"/><circle cx="22" cy="1" r="1.5" fill="%23fff" opacity="0.8"/><circle cx="18" cy="-1" r="1" fill="%23fff" opacity="0.8"/></g></svg>'), auto !important;
+  }
+  
+  .font-derp {
+    font-family: 'Derp', 'Permanent Marker', cursive;
+  }
+  
+  h1 { @apply font-derp tracking-wider text-6xl md:text-8xl text-center; }
+  h2 { @apply font-derp tracking-wider text-4xl md:text-6xl text-center; }
+  h3 { @apply font-derp tracking-wider text-3xl md:text-4xl text-center; }
+  h4, h5, h6 { @apply font-derp tracking-wider text-2xl md:text-3xl text-center; }
+  
+  p {
+    @apply font-caveat text-xl md:text-2xl font-bold text-center;
+  }
+}
+
+/* ==================== COMPONENTS ==================== */
+@layer components {
+  /* Cursor variants */
+  .cursor-magic-wand-active {
+    cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><defs><linearGradient id="wandGlow" x1="0%25" y1="0%25" x2="100%25" y2="100%25"><stop offset="0%25" style="stop-color:%23f3ff00"/><stop offset="50%25" style="stop-color:%23f09f00"/><stop offset="100%25" style="stop-color:%239d4602"/></linearGradient></defs><g transform="rotate(-45 18 18)"><rect x="16" y="4" width="4" height="24" fill="url(%23wandGlow)" stroke="%23040104" stroke-width="1"/><polygon points="18,4 14,0 18,-2 22,0" fill="%23f3ff00" stroke="%23040104" stroke-width="1"/><circle cx="14" cy="2" r="3" fill="%23f3ff00" opacity="0.6"><animate attributeName="r" values="2;4;2" dur="0.8s" repeatCount="indefinite"/></circle><circle cx="22" cy="1" r="2.5" fill="%23f3ff00" opacity="0.6"><animate attributeName="r" values="1.5;3;1.5" dur="0.8s" begin="0.2s" repeatCount="indefinite"/></circle><circle cx="18" cy="-1" r="2" fill="%23f3ff00" opacity="0.6"><animate attributeName="r" values="1;2.5;1" dur="0.8s" begin="0.4s" repeatCount="indefinite"/></circle></g></svg>'), auto !important;
+  }
+  
+  /* Hand-drawn border effect */
+  .hand-drawn-border {
+    border: 3px solid #040104;
+    border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+  }
+  
+  /* Glitch text effect */
+  .glitch-text {
+    position: relative;
+    animation: glitch 0.5s infinite;
+  }
+
+  .glitch-text::before,
+  .glitch-text::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .glitch-text::before {
+    animation: glitch 0.5s infinite;
+    color: #ff00ff;
+    z-index: -1;
+    animation-delay: 0.1s;
+  }
+
+  .glitch-text::after {
+    animation: glitch 0.5s infinite;
+    color: #00ffff;
+    z-index: -2;
+    animation-delay: 0.2s;
+  }
+  
+  /* Matrix canvas enhancement */
+  .matrix-enhanced {
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.8) 100%);
+  }
+}
+
+/* ==================== UTILITIES ==================== */
+@layer utilities {
+  /* Z-index layers - organized from lowest to highest */
+  .z-matrix { z-index: 10; }
+  .z-vortex { z-index: 20; }
+  .z-content { z-index: 100; }
+  .z-effects { z-index: 1000; }
+  .z-ui { z-index: 10000; }
+  .z-pills { z-index: 100000; }
+  .z-cursor { z-index: 999999; }
+  
+  /* Animation utilities */
+  .animate-pill-float {
+    animation: pill-fall var(--animation-duration, 8s) linear infinite;
+  }
+
+  .animate-screen-shake {
+    animation: screen-shake 0.5s ease-in-out;
+  }
+
+  .animate-screen-shake-intense {
+    animation: screen-shake-intense 0.3s ease-in-out infinite;
+  }
+
+  .animate-pulse-bg {
+    animation: rainbow-background 3s linear infinite;
+  }
+}
+
+/* ==================== KEYFRAME ANIMATIONS ==================== */
+/* Movement animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-20px) rotate(2deg); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes floatAround {
+  0% { transform: translateX(-100px) translateY(100vh) rotate(0deg); }
+  100% { transform: translateX(calc(100vw + 100px)) translateY(-100px) rotate(360deg); }
+}
+
+/* Explosion & particle effects */
+@keyframes explode {
+  0% { 
+    transform: translate(-50%, -50%) scale(1) rotate(0deg); 
+    opacity: 1; 
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(2) rotate(180deg);
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(0) rotate(360deg); 
+    opacity: 0; 
+  }
+}
+
+@keyframes sparkle {
+  0% { 
+    opacity: 0; 
+    transform: scale(0) rotate(0deg);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.5) rotate(180deg);
+  }
+  100% { 
+    opacity: 0; 
+    transform: scale(0) rotate(360deg);
+  }
+}
+
+@keyframes starFloat {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--sx), -50px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Pill animations */
+@keyframes pill-spin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes pill-fall {
+  0% {
+    transform: translateY(-100px) rotate(0deg);
+  }
+  100% {
+    transform: translateY(calc(100vh + 100px)) rotate(720deg);
+  }
+}
+
+@keyframes pill-explosion {
+  0% { 
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(var(--x), var(--y)) rotate(720deg) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Glitch effects */
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+
+@keyframes glitch-1 {
+  0%, 100% { 
+    transform: translate(0);
+    opacity: 0.8;
+  }
+  20% { 
+    transform: translate(-2px, 2px);
+    opacity: 0.8;
+  }
+  40% { 
+    transform: translate(-2px, -2px);
+    opacity: 0.8;
+  }
+  60% { 
+    transform: translate(2px, 2px);
+    opacity: 0.8;
+  }
+  80% { 
+    transform: translate(2px, -2px);
+    opacity: 0.8;
+  }
+}
+
+@keyframes glitch-2 {
+  0%, 100% { 
+    transform: translate(0);
+    opacity: 0.8;
+  }
+  20% { 
+    transform: translate(2px, -2px);
+    opacity: 0.8;
+  }
+  40% { 
+    transform: translate(-2px, 2px);
+    opacity: 0.8;
+  }
+  60% { 
+    transform: translate(2px, 2px);
+    opacity: 0.8;
+  }
+  80% { 
+    transform: translate(-2px, -2px);
+    opacity: 0.8;
+  }
+}
+
+/* Color & filter animations */
+@keyframes chaos-mode {
+  0% { filter: hue-rotate(0deg) contrast(100%) brightness(100%); }
+  25% { filter: hue-rotate(90deg) contrast(150%) brightness(110%); }
+  50% { filter: hue-rotate(180deg) contrast(200%) brightness(120%); }
+  75% { filter: hue-rotate(270deg) contrast(150%) brightness(110%); }
+  100% { filter: hue-rotate(360deg) contrast(100%) brightness(100%); }
+}
+
+@keyframes rainbow-glow {
+  0%, 100% { box-shadow: 0 0 30px #ff0000, 0 0 60px #ff0000; }
+  16% { box-shadow: 0 0 30px #ff7f00, 0 0 60px #ff7f00; }
+  33% { box-shadow: 0 0 30px #ffff00, 0 0 60px #ffff00; }
+  50% { box-shadow: 0 0 30px #00ff00, 0 0 60px #00ff00; }
+  66% { box-shadow: 0 0 30px #0000ff, 0 0 60px #0000ff; }
+  83% { box-shadow: 0 0 30px #8b00ff, 0 0 60px #8b00ff; }
+}
+
+@keyframes rainbow-background {
+  0% { background-color: #ff0000; }
+  16% { background-color: #ff8800; }
+  33% { background-color: #ffff00; }
+  50% { background-color: #00ff00; }
+  66% { background-color: #0088ff; }
+  83% { background-color: #8800ff; }
+  100% { background-color: #ff0000; }
+}
+
+@keyframes pulse-crazy {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg);
+    filter: hue-rotate(0deg);
+  }
+  25% { 
+    transform: scale(1.1) rotate(5deg);
+    filter: hue-rotate(90deg);
+  }
+  50% { 
+    transform: scale(0.9) rotate(-5deg);
+    filter: hue-rotate(180deg);
+  }
+  75% { 
+    transform: scale(1.1) rotate(5deg);
+    filter: hue-rotate(270deg);
+  }
+}
+
+/* Screen effects */
+@keyframes screen-shake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-20px, -20px) rotate(-1deg); }
+  20% { transform: translate(20px, 20px) rotate(1deg); }
+  30% { transform: translate(-20px, 20px) rotate(-1deg); }
+  40% { transform: translate(20px, -20px) rotate(1deg); }
+  50% { transform: translate(-20px, -20px) rotate(-1deg); }
+  60% { transform: translate(20px, 20px) rotate(1deg); }
+  70% { transform: translate(-20px, 20px) rotate(-1deg); }
+  80% { transform: translate(20px, -20px) rotate(1deg); }
+  90% { transform: translate(-20px, -20px) rotate(-1deg); }
+}
+
+@keyframes screen-shake-intense {
+  0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  10% { transform: translate(-30px, -30px) rotate(-3deg) scale(1.01); }
+  20% { transform: translate(30px, 30px) rotate(3deg) scale(0.99); }
+  30% { transform: translate(-30px, 30px) rotate(-3deg) scale(1.01); }
+  40% { transform: translate(30px, -30px) rotate(3deg) scale(0.99); }
+  50% { transform: translate(-30px, -30px) rotate(-3deg) scale(1.01); }
+  60% { transform: translate(30px, 30px) rotate(3deg) scale(0.99); }
+  70% { transform: translate(-30px, 30px) rotate(-3deg) scale(1.01); }
+  80% { transform: translate(30px, -30px) rotate(3deg) scale(0.99); }
+  90% { transform: translate(-30px, -30px) rotate(-3deg) scale(1.01); }
+}
+
+/* Special effects */
+@keyframes text-3d {
+  0% { 
+    transform: translate(-50%, -50%) rotateX(15deg) rotateY(-15deg);
+  }
+  25% { 
+    transform: translate(-50%, -50%) rotateX(-15deg) rotateY(15deg);
+  }
+  50% { 
+    transform: translate(-50%, -50%) rotateX(15deg) rotateY(15deg);
+  }
+  75% { 
+    transform: translate(-50%, -50%) rotateX(-15deg) rotateY(-15deg);
+  }
+  100% { 
+    transform: translate(-50%, -50%) rotateX(15deg) rotateY(-15deg);
+  }
+}
+
+@keyframes matrix-fall {
+  0% { 
+    transform: translateY(-100px);
+    opacity: 1;
+  }
+  100% { 
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+@keyframes matrix-glow {
+  0%, 100% { 
+    filter: drop-shadow(0 0 5px currentColor);
+  }
+  50% { 
+    filter: drop-shadow(0 0 20px currentColor);
+  }
+}
+
+@keyframes laser-shoot {
+  0% {
+    left: -100vw;
+    opacity: 1;
+  }
+  100% {
+    left: 100vw;
+    opacity: 0;
+  }
+}

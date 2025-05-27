@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin Wizards - Magic Internet Money</title>
+    
+    <!-- 
+    ============================================================================
+    BITCOIN WIZARDS - MAGIC INTERNET MONEY
+    ============================================================================
+    
+    NOTE: Image paths have been updated to match the TraitsToggle.js structure:
+    examples/parts/[part-name]/[variant].png
+    
+    Instead of /assets/wizard-parts/
+    
+    The Derp font adds the perfect MS Paint aesthetic!
+    Located at: /assets/font/derp.woff and derp.woff2
+    
+    SUPER CRAZY FEATURES:
+    - Click wizard 3 times: He speaks!
+    - Click wizard 5 times: Rainbow power mode!
+    - Click wizard 7 times: Summon mini wizards!
+    - Click wizard 10 times: ULTIMATE WIZARD MODE!
+    - Click $MIM ticker 7 times: Secret pill stash!
+    - Press 'r' key: Randomize wizard colors!
+    - Konami Code: ↑ ↑ ↓ ↓ ← → ← → B A for LASER EYES!
+    - Move mouse too much in one spot: HEAT EXPLOSION!
+    - Matrix rain with Bitcoin symbols in background
+    - Voice synthesis wizard wisdom (10 clicks)
+    - Bitcoin vortex spinning in background
+    
+    ============================================================================
+    -->
+    <style>
+        /* Custom derp font - the ultimate MS Paint aesthetic! */
+        @font-face {
+            font-family: 'Derp';
+            src: url('assets/font/derp.woff2') format('woff2'),
+                 url('assets/font/derp.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        @font-face {
+            font-family: 'Derp';
+            src: url('assets/font/derp-a.woff2') format('woff2'),
+                 url('assets/font/derp-a.woff') format('woff');
+            font-weight: bold;
+            font-style: normal;
+        }
+        
+        /* Fallback fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* Magic wand cursor */
+        body {
+            font-family: 'Derp', 'Permanent Marker', cursive;
+            background: #f5f5f0;
+            overflow-x: hidden;
+            cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><defs><linearGradient id="wand" x1="0%25" y1="0%25" x2="100%25" y2="100%25"><stop offset="0%25" style="stop-color:%23f3ff00"/><stop offset="50%25" style="stop-color:%23f09f00"/><stop offset="100%25" style="stop-color:%239d4602"/></linearGradient></defs><g transform="rotate(-45 18 18)"><rect x="16" y="4" width="4" height="24" fill="url(%23wand)" stroke="%23040104" stroke-width="1"/><polygon points="18,4 14,0 18,-2 22,0" fill="%23f3ff00" stroke="%23040104" stroke-width="1"/><circle cx="14" cy="2" r="2" fill="%23fff" opacity="0.8"/><circle cx="22" cy="1" r="1.5" fill="%23fff" opacity="0.8"/><circle cx="18" cy="-1" r="1" fill="%23fff" opacity="0.8"/></g></svg>'), auto;
+        }
+        
+        /* Use Derp font for headings, Caveat for readable body text */
+        h1, h2, h3, .nav-btn, .join-btn, .mim-ticker {
+            font-family: 'Derp', 'Permanent Marker', cursive;
+            letter-spacing: 0.05em;
+        }
+        
+        p, .info-box p, .stat-box p {
+            font-family: 'Caveat', cursive;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+        
+        /* Clickable elements get special cursor */
+        a, button, .clickable, .wizard-hand, .gallery-wizard, .main-wizard {
+            cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><defs><linearGradient id="wandGlow" x1="0%25" y1="0%25" x2="100%25" y2="100%25"><stop offset="0%25" style="stop-color:%23f3ff00"/><stop offset="50%25" style="stop-color:%23f09f00"/><stop offset="100%25" style="stop-color:%239d4602"/></linearGradient></defs><g transform="rotate(-45 18 18)"><rect x="16" y="4" width="4" height="24" fill="url(%23wandGlow)" stroke="%23040104" stroke-width="1"/><polygon points="18,4 14,0 18,-2 22,0" fill="%23f3ff00" stroke="%23040104" stroke-width="1"/><circle cx="14" cy="2" r="3" fill="%23f3ff00" opacity="0.6"><animate attributeName="r" values="2;4;2" dur="0.8s" repeatCount="indefinite"/></circle><circle cx="22" cy="1" r="2.5" fill="%23f3ff00" opacity="0.6"><animate attributeName="r" values="1.5;3;1.5" dur="0.8s" begin="0.2s" repeatCount="indefinite"/></circle><circle cx="18" cy="-1" r="2" fill="%23f3ff00" opacity="0.6"><animate attributeName="r" values="1;2.5;1" dur="0.8s" begin="0.4s" repeatCount="indefinite"/></circle></g></svg>'), auto;
+        }
+        
+        /* Hand-drawn border effect */
+        .hand-drawn-border {
+            border: 3px solid #040104;
+            border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+            position: relative;
+        }
+        
+        /* Wizard container */
+        .wizard-hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff),
+                        linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            position: relative;
+        }
+        
+        /* Floating wizard animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+        
+        @keyframes sparkle {
+            0% { opacity: 0; transform: scale(0) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1) rotate(180deg); }
+            100% { opacity: 0; transform: scale(0) rotate(360deg); }
+        }
+        
+        /* Extra sparkle elements */
+        .sparkle-element {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #f3ff00;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            animation: sparkle 2s ease-in-out infinite;
+        }
+        
+        .main-wizard {
+            width: 400px;
+            height: 400px;
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+            cursor: pointer;
+            transition: transform 0.3s;
+            /* Center the wizard parts container */
+            margin: 0 auto;
+        }
+        
+        .main-wizard:hover {
+            transform: scale(1.05) rotate(-5deg);
+        }
+        
+        /* Wizard part positioning - all parts stack on top of each other */
+        .wizard-part {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .wizard-part img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        
+        /* Layer ordering matching TraitsToggle.js */
+        .wizard-background { z-index: 1; }
+        .wizard-robe { z-index: 5; }
+        .wizard-face { z-index: 2; }
+        .wizard-nose { z-index: 3; }
+        .wizard-eyes { z-index: 4; }
+        .wizard-beard { z-index: 6; }
+        .wizard-right-hand { z-index: 8; }
+        .wizard-left-hand { z-index: 7; }
+        .wizard-hat { z-index: 9; }
+        .wizard-mouth { z-index: 10; }
+        .wizard-text { z-index: 11; }
+        
+        /* Fire effect for left hand */
+        .wizard-fire {
+            opacity: 0;
+            transition: opacity 0.3s;
+            animation: flicker 0.5s ease-in-out infinite alternate;
+            pointer-events: auto;
+        }
+        
+        @keyframes flicker {
+            0% { transform: scale(1) rotate(-2deg); }
+            100% { transform: scale(1.1) rotate(2deg); }
+        }
+        
+        .main-wizard:hover .wizard-fire {
+            opacity: 1;
+        }
+        
+        /* Title */
+        .magic-title {
+            font-family: 'Derp', 'Permanent Marker', cursive;
+            font-size: 4rem;
+            color: #040104;
+            margin-top: 50px;
+            position: relative;
+            transform: rotate(-3deg);
+            text-shadow: 3px 3px 0 #f3ff00;
+            letter-spacing: 0.1em;
+        }
+        
+        .magic-title span {
+            display: inline-block;
+            animation: bounce 2s ease-in-out infinite;
+        }
+        
+        .magic-title span:nth-child(odd) {
+            animation-delay: 0.1s;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* Tagline with highlight */
+        .tagline {
+            font-family: 'Derp', 'Caveat', cursive;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-top: 20px;
+            position: relative;
+            display: inline-block;
+            transform: rotate(2deg);
+        }
+        
+        .tagline::before {
+            content: '';
+            position: absolute;
+            width: 110%;
+            height: 30px;
+            background: #67d1e3;
+            top: 10px;
+            left: -5%;
+            z-index: -1;
+            transform: rotate(-1deg);
+            border-radius: 5px;
+        }
+        
+        /* Join Us button */
+        .join-btn {
+            margin-top: 40px;
+            padding: 20px 40px;
+            background: #f09f00;
+            border: 4px solid #040104;
+            border-radius: 20px 5px 20px 5px;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transform: rotate(-2deg);
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #040104;
+            display: inline-block;
+            box-shadow: 5px 5px 0 #040104;
+        }
+        
+        .join-btn:hover {
+            transform: rotate(2deg) scale(1.1);
+            background: #f3ff00;
+            box-shadow: 8px 8px 0 #040104;
+        }
+        
+        /* Navigation */
+        .wonky-nav {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            padding: 15px 25px;
+            background: #f09f00;
+            border: 3px solid #040104;
+            border-radius: 15px 5px 15px 5px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transform: rotate(-2deg);
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #040104;
+            display: inline-block;
+        }
+        
+        .nav-btn:hover {
+            transform: rotate(2deg) scale(1.1);
+            background: #ee8e02;
+            box-shadow: 5px 5px 0 #040104;
+        }
+        
+        /* Bitcoin symbols floating */
+        .bitcoin-float {
+            position: fixed;
+            font-size: 2rem;
+            color: #f09f00;
+            animation: floatAround 20s linear infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes floatAround {
+            0% { transform: translateX(-100px) translateY(100vh) rotate(0deg); }
+            100% { transform: translateX(100vw) translateY(-100px) rotate(360deg); }
+        }
+        
+        /* MIM token callout */
+        .mim-ticker {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #6ef405;
+            padding: 10px 20px;
+            border: 3px solid #040104;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            transform: rotate(-5deg);
+            z-index: 1000;
+        }
+        
+        /* Info section */
+        .info-section {
+            padding: 100px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .info-box {
+            background: white;
+            padding: 40px;
+            margin: 40px 0;
+            transform: rotate(-1deg);
+            position: relative;
+        }
+        
+        .info-box:nth-child(even) {
+            transform: rotate(1deg);
+        }
+        
+        .info-box h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #2f53fe;
+            position: relative;
+            display: inline-block;
+            font-family: 'Derp', 'Permanent Marker', cursive;
+        }
+        
+        .info-box h2::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 20px;
+            background: #6ef405;
+            bottom: 5px;
+            left: 0;
+            z-index: -1;
+            transform: skew(-5deg);
+        }
+        
+        .info-box p {
+            font-size: 1.3rem;
+            line-height: 1.8;
+            color: #040104;
+        }
+        
+        /* Fair Launch section */
+        .fair-launch {
+            background: #040104;
+            color: white;
+            padding: 100px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .fair-launch::before,
+        .fair-launch::after {
+            content: '✨';
+            position: absolute;
+            font-size: 100px;
+            opacity: 0.1;
+            animation: sparkle 3s ease-in-out infinite;
+        }
+        
+        .fair-launch::before {
+            top: 20px;
+            left: 10%;
+        }
+        
+        .fair-launch::after {
+            bottom: 20px;
+            right: 10%;
+            animation-delay: 1.5s;
+        }
+        
+        .fair-launch h2 {
+            font-size: 3rem;
+            margin-bottom: 40px;
+            color: #f3ff00;
+            text-shadow: 3px 3px 0 #2f53fe;
+            font-family: 'Permanent Marker', cursive;
+        }
+        
+        .fair-launch p {
+            font-family: 'Caveat', cursive;
+            font-weight: 700;
+        }
+        
+        .launch-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .stat-box {
+            background: #2f53fe;
+            padding: 30px;
+            border: 3px solid #f3ff00;
+            border-radius: 20px 5px 20px 5px;
+            transform: rotate(-2deg);
+        }
+        
+        .stat-box:nth-child(even) {
+            transform: rotate(2deg);
+        }
+        
+        .stat-box h3 {
+            font-size: 2rem;
+            color: #f3ff00;
+            margin-bottom: 10px;
+            font-family: 'Permanent Marker', cursive;
+        }
+        
+        .stat-box p {
+            font-size: 1.2rem;
+            font-family: 'Caveat', cursive;
+            font-weight: 700;
+        }
+        
+        /* Interactive wizard gallery */
+        .wizard-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            padding: 50px;
+            background: #e9e9e9;
+            border-top: 5px solid #040104;
+            border-bottom: 5px solid #040104;
+        }
+        
+        .gallery-wizard {
+            width: 200px;
+            height: 250px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0 auto;
+        }
+        
+        .gallery-wizard:hover {
+            transform: translateY(-10px) rotate(5deg);
+        }
+        
+        .gallery-wizard-label {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #f3ff00;
+            padding: 5px 15px;
+            border: 2px solid #040104;
+            border-radius: 10px;
+            font-weight: bold;
+            white-space: nowrap;
+            font-family: 'Permanent Marker', cursive;
+            font-size: 0.9rem;
+        }
+        
+        /* Why MIM section */
+        .why-mim {
+            padding: 100px 20px;
+            background: white;
+            text-align: center;
+        }
+        
+        .why-mim h2 {
+            font-size: 3rem;
+            margin-bottom: 50px;
+            color: #040104;
+            text-shadow: 2px 2px 0 #67d1e3;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .feature-card {
+            background: #f5f5f0;
+            padding: 30px;
+            border: 3px solid #040104;
+            border-radius: 20px;
+            transform: rotate(-1deg);
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: rotate(1deg) scale(1.05);
+            background: #f3ff00;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #2f53fe;
+            font-family: 'Permanent Marker', cursive;
+        }
+        
+        .feature-card p {
+            font-family: 'Caveat', cursive;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        
+        /* Footer */
+        .wonky-footer {
+            background: #040104;
+            color: white;
+            padding: 50px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .wonky-footer h3 {
+            font-family: 'Permanent Marker', cursive;
+        }
+        
+        .wonky-footer p {
+            font-family: 'Caveat', cursive;
+            font-weight: 700;
+        }
+        
+        .wonky-footer::before {
+            content: '₿';
+            position: absolute;
+            font-size: 200px;
+            opacity: 0.1;
+            top: -50px;
+            right: -50px;
+            transform: rotate(-15deg);
+        }
+        
+        /* SUPER CRAZY FEATURES */
+        
+        /* Glitch text effect */
+        .glitch-text {
+            position: relative;
+            animation: glitch 2s infinite;
+        }
+        
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .glitch-text::before {
+            animation: glitch-1 0.5s infinite;
+            color: #f3ff00;
+            z-index: -1;
+        }
+        
+        .glitch-text::after {
+            animation: glitch-2 0.5s infinite;
+            color: #67d1e3;
+            z-index: -2;
+        }
+        
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+        
+        @keyframes glitch-1 {
+            0%, 100% { clip-path: inset(0 0 0 0); }
+            25% { clip-path: inset(0 0 50% 0); }
+            50% { clip-path: inset(50% 0 0 0); }
+            75% { clip-path: inset(0 0 30% 0); }
+        }
+        
+        @keyframes glitch-2 {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(2px, -2px); }
+            40% { transform: translate(-2px, 2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(-2px, -2px); }
+        }
+        
+        /* Rainbow glow effect */
+        .rainbow-glow {
+            animation: rainbow-glow 3s ease-in-out infinite;
+        }
+        
+        @keyframes rainbow-glow {
+            0%, 100% { box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000; }
+            16% { box-shadow: 0 0 20px #ff7f00, 0 0 40px #ff7f00; }
+            33% { box-shadow: 0 0 20px #ffff00, 0 0 40px #ffff00; }
+            50% { box-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00; }
+            66% { box-shadow: 0 0 20px #0000ff, 0 0 40px #0000ff; }
+            83% { box-shadow: 0 0 20px #8b00ff, 0 0 40px #8b00ff; }
+        }
+        
+        /* Matrix rain effect */
+        .matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        .matrix-drop {
+            position: absolute;
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 20px;
+            animation: matrix-fall linear infinite;
+        }
+        
+        @keyframes matrix-fall {
+            to { transform: translateY(100vh); }
+        }
+        
+        /* Wizard power-up mode */
+        .wizard-powered {
+            animation: power-up 1s ease-in-out infinite alternate !important;
+        }
+        
+        @keyframes power-up {
+            0% { 
+                transform: scale(1) rotate(0deg);
+                filter: hue-rotate(0deg) brightness(1);
+            }
+            100% { 
+                transform: scale(1.2) rotate(10deg);
+                filter: hue-rotate(360deg) brightness(1.5);
+            }
+        }
+        
+        /* Screen shake effect */
+        @keyframes screen-shake {
+            0%, 100% { transform: translate(0, 0); }
+            10% { transform: translate(-10px, -10px); }
+            20% { transform: translate(10px, 10px); }
+            30% { transform: translate(-10px, 10px); }
+            40% { transform: translate(10px, -10px); }
+            50% { transform: translate(-10px, -10px); }
+            60% { transform: translate(10px, 10px); }
+            70% { transform: translate(-10px, 10px); }
+            80% { transform: translate(10px, -10px); }
+            90% { transform: translate(-10px, -10px); }
+        }
+        
+        .shake-screen {
+            animation: screen-shake 0.5s;
+        }
+        
+        /* Rotating Bitcoin background */
+        .bitcoin-vortex {
+            position: fixed;
+            width: 200vw;
+            height: 200vh;
+            top: -50vh;
+            left: -50vw;
+            background: repeating-conic-gradient(from 0deg at 50% 50%, 
+                transparent 0deg, 
+                #f09f00 10deg, 
+                transparent 20deg);
+            animation: vortex-spin 30s linear infinite;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: -2;
+        }
+        
+        @keyframes vortex-spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Wizard eye laser beams */
+        .laser-eyes {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 12;
+            display: none;
+        }
+        
+        .laser-beam {
+            position: absolute;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #ff0000, #ff0000);
+            transform-origin: left center;
+            animation: laser-shoot 0.5s ease-out forwards;
+        }
+        
+        @keyframes laser-shoot {
+            0% { width: 0; opacity: 1; }
+            100% { width: 1000px; opacity: 0; }
+        }
+        
+        /* Pills floating around */
+        .pill-rain {
+            position: fixed;
+            font-size: 30px;
+            animation: pill-float 10s linear infinite;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        @keyframes pill-float {
+            0% { 
+                transform: translateY(-100px) translateX(0) rotate(0deg);
+            }
+            100% { 
+                transform: translateY(100vh) translateX(100px) rotate(720deg);
+            }
+        }
+        
+        /* Wizard transformation states */
+        .wizard-super-saiyan .wizard-hat img {
+            filter: hue-rotate(60deg) brightness(2);
+        }
+        
+        .wizard-super-saiyan .wizard-robe img {
+            filter: hue-rotate(60deg) saturate(2);
+        }
+        
+        /* 3D card flip effect */
+        .flip-card {
+            perspective: 1000px;
+        }
+        
+        .flip-card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        /* Pulsing background */
+        @keyframes pulse-bg {
+            0%, 100% { background-size: 30px 30px; }
+            50% { background-size: 40px 40px; }
+        }
+        
+        /* General pulse animation */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .magic-title {
+                font-size: 2.5rem;
+            }
+            
+            .main-wizard {
+                width: 300px;
+                height: 300px;
+            }
+            
+            .wonky-nav {
+                flex-direction: column;
+                gap: 10px;
+                top: 60px;
+            }
+            
+            .nav-btn {
+                font-size: 1rem;
+                padding: 10px 15px;
+            }
+            
+            .mim-ticker {
+                font-size: 1.2rem;
+                padding: 8px 15px;
+            }
+            
+            .join-btn {
+                font-size: 1.5rem;
+                padding: 15px 30px;
+            }
+        }
+        
+        /* Cursor trail effect - magic sparkles */
+        .sparkle-trail {
+            position: fixed;
+            pointer-events: none;
+            width: 8px;
+            height: 8px;
+            background: #f3ff00;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #f3ff00;
+            animation: magicSparkle 1s ease-out forwards;
+        }
+        
+        @keyframes magicSparkle {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(var(--dx), var(--dy)) scale(1.5);
+            }
+            100% {
+                transform: translate(calc(var(--dx) * 2), calc(var(--dy) * 2)) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        /* Star trail variant */
+        .star-trail {
+            position: fixed;
+            pointer-events: none;
+            font-size: 20px;
+            animation: starFloat 1.5s ease-out forwards;
+        }
+        
+        @keyframes starFloat {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--sx), -50px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- MIM Ticker -->
+    <div class="mim-ticker">$MIM</div>
+    
+    <!-- Navigation -->
+    <nav class="wonky-nav">
+        <a href="#about" class="nav-btn">Story</a>
+        <a href="#launch" class="nav-btn">Fair Launch</a>
+        <a href="#wizards" class="nav-btn">Wizards</a>
+        <a href="#why" class="nav-btn">Why MIM?</a>
+    </nav>
+    
+    <!-- Floating Bitcoin symbols -->
+    <div class="bitcoin-float" style="left: 10%; animation-delay: 0s;">₿</div>
+    <div class="bitcoin-float" style="left: 30%; animation-delay: 5s;">₿</div>
+    <div class="bitcoin-float" style="left: 50%; animation-delay: 10s;">₿</div>
+    <div class="bitcoin-float" style="left: 70%; animation-delay: 15s;">₿</div>
+    <div class="bitcoin-float" style="left: 90%; animation-delay: 20s;">₿</div>
+    
+    <!-- Hero Section -->
+    <section class="wizard-hero">
+        <div class="main-wizard" id="mainWizard">
+            <!-- Proper layering order based on TraitsToggle.js -->
+            
+            <!-- Face (z-index: 2) -->
+            <div class="wizard-part wizard-face">
+                <img src="examples/parts/face/og.png" alt="Wizard Face" />
+            </div>
+            
+            <!-- Nose (z-index: 3) -->
+            <div class="wizard-part wizard-nose">
+                <img src="examples/parts/nose/neutral.png" alt="Wizard Nose" />
+            </div>
+            
+            <!-- Eyes (z-index: 4) -->
+            <div class="wizard-part wizard-eyes">
+                <img src="examples/parts/eyes/neutral.png" alt="Wizard Eyes" />
+            </div>
+            
+            <!-- Robe (z-index: 5) -->
+            <div class="wizard-part wizard-robe">
+                <img src="examples/parts/robe/og.png" alt="Wizard Robe" />
+            </div>
+            
+            <!-- Beard (z-index: 6) -->
+            <div class="wizard-part wizard-beard">
+                <img src="examples/parts/beard/og.png" alt="Wizard Beard" />
+            </div>
+            
+            <!-- Left Hand with Fire (z-index: 7) -->
+            <div class="wizard-part wizard-left-hand wizard-fire">
+                <img src="examples/parts/lefthand/fire.png" alt="Wizard Fire" />
+            </div>
+            
+            <!-- Right Hand (z-index: 8) - hidden by default -->
+            <div class="wizard-part wizard-right-hand" style="display: none;">
+                <img src="examples/parts/righthand/hand.png" alt="Right Hand" />
+            </div>
+            
+            <!-- Hat (z-index: 9) -->
+            <div class="wizard-part wizard-hat">
+                <img src="examples/parts/hat/og.png" alt="Wizard Hat" />
+            </div>
+            
+            <!-- Mouth (z-index: 10) -->
+            <div class="wizard-part wizard-mouth">
+                <img src="examples/parts/mouth/neutral.png" alt="Wizard Mouth" />
+            </div>
+            
+            <!-- Text (z-index: 11) -->
+            <div class="wizard-part wizard-text">
+                <img src="examples/parts/text/rbitcoin.png" alt="r/bitcoin" />
+            </div>
+        </div>
+        
+        <h1 class="magic-title glitch-text" data-text="Magic Internet Money">
+            <span>M</span><span>a</span><span>g</span><span>i</span><span>c</span>
+            <span>I</span><span>n</span><span>t</span><span>e</span><span>r</span><span>n</span><span>e</span><span>t</span>
+            <span>M</span><span>o</span><span>n</span><span>e</span><span>y</span>
+        </h1>
+        
+        <p class="tagline">Bitcoin Wizards</p>
+        
+        <a href="#" class="join-btn rainbow-glow">Join Us</a>
+        
+        <!-- SUPER CRAZY: Matrix rain effect -->
+        <div class="matrix-rain" id="matrixRain"></div>
+    </section>
+    
+    <!-- Story Section -->
+    <section class="info-section" id="about">
+        <div class="info-box hand-drawn-border">
+            <h2>The Origin Story</h2>
+            <p>Born from the mystical depths of r/bitcoin in 2013, the Bitcoin Wizard emerged as a symbol of magic internet money. Created by the legendary @mavensbot, this MS Paint masterpiece became the beloved mascot of Bitcoin's early adopters—those who saw the magic before the world understood.</p>
+        </div>
+        
+        <div class="info-box hand-drawn-border">
+            <h2>Pure Culture, Immortalized</h2>
+            <p>This isn't just another meme coin—it's Bitcoin culture, history, and provenance immortalized on-chain. Every wizard is raw, handcrafted, MS-Painted by the community, embodying the true decentralized spirit. No corporate polish, no venture backing, just pure, uncut Magic Internet Money.</p>
+        </div>
+        
+        <div class="info-box hand-drawn-border">
+            <h2>A Digital Relic of Whimsy</h2>
+            <p>MIM exists as a digital relic of whimsy, devoid of utility, function, or purpose—except to serve as a beacon of the playful chaos that defined Bitcoin's journey. It proudly occupies the intersection of art, history, and inexplicable internet humor.</p>
+        </div>
+    </section>
+    
+    <!-- Fair Launch Section -->
+    <section class="fair-launch" id="launch">
+        <h2>The Fairest Launch in History</h2>
+        
+        <div class="launch-stats">
+            <div class="stat-box">
+                <h3>No Presale</h3>
+                <p>Zero insider deals</p>
+            </div>
+            
+            <div class="stat-box">
+                <h3>No Premine</h3>
+                <p>Not a single token reserved</p>
+            </div>
+            
+            <div class="stat-box">
+                <h3>1 Month Wait</h3>
+                <p>BRC-20 deployed and untouched</p>
+            </div>
+            
+            <div class="stat-box">
+                <h3>100% Public</h3>
+                <p>Every token in the wild</p>
+            </div>
+        </div>
+        
+        <p style="font-size: 1.3rem; margin-top: 40px; max-width: 800px; margin-left: auto; margin-right: auto;">
+            BRC-20 deployed and left untouched for a full month—not a single transaction, no secret wallets accumulating. Only when MavensBot tweeted did the minting frenzy begin. No 90% supply held by shadowy devs. Every single token is out in the wild, owned by the people.
+        </p>
+    </section>
+    
+    <!-- Wizard Gallery -->
+    <section class="wizard-gallery" id="wizards">
+        <div class="gallery-wizard">
+            <!-- Placeholder for wizard #1 -->
+            <div style="width: 100%; height: 100%; background: #2f53fe; border: 3px solid #040104; border-radius: 100px 100px 20px 20px; position: relative;">
+                <div style="position: absolute; top: 30%; left: 50%; transform: translateX(-50%); width: 60%; height: 40%; background: #e9ca1a; border: 2px solid #040104; border-radius: 50%;"></div>
+            </div>
+            <div class="gallery-wizard-label">Wizard #1</div>
+        </div>
+        
+        <div class="gallery-wizard">
+            <!-- Placeholder for wizard #70 (MavensBot's) -->
+            <div style="width: 100%; height: 100%; background: #f09f00; border: 3px solid #040104; border-radius: 100px 100px 20px 20px; position: relative;">
+                <div style="position: absolute; top: 30%; left: 50%; transform: translateX(-50%); width: 60%; height: 40%; background: #e9ca1a; border: 2px solid #040104; border-radius: 50%;"></div>
+                <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-size: 2rem;">⭐</div>
+            </div>
+            <div class="gallery-wizard-label">MavensBot #70</div>
+        </div>
+        
+        <div class="gallery-wizard">
+            <!-- More wizard variations -->
+            <div style="width: 100%; height: 100%; background: #67d1e3; border: 3px solid #040104; border-radius: 100px 100px 20px 20px; position: relative;">
+                <div style="position: absolute; top: 30%; left: 50%; transform: translateX(-50%); width: 60%; height: 40%; background: #e9ca1a; border: 2px solid #040104; border-radius: 50%;"></div>
+            </div>
+            <div class="gallery-wizard-label">Wizard #123</div>
+        </div>
+        
+        <div class="gallery-wizard">
+            <div style="width: 100%; height: 100%; background: #6ef405; border: 3px solid #040104; border-radius: 100px 100px 20px 20px; position: relative;">
+                <div style="position: absolute; top: 30%; left: 50%; transform: translateX(-50%); width: 60%; height: 40%; background: #e9ca1a; border: 2px solid #040104; border-radius: 50%;"></div>
+            </div>
+            <div class="gallery-wizard-label">Wizard #420</div>
+        </div>
+        
+        <div class="gallery-wizard">
+            <div style="width: 100%; height: 100%; background: #ee8e02; border: 3px solid #040104; border-radius: 100px 100px 20px 20px; position: relative;">
+                <div style="position: absolute; top: 30%; left: 50%; transform: translateX(-50%); width: 60%; height: 40%; background: #e9ca1a; border: 2px solid #040104; border-radius: 50%;"></div>
+            </div>
+            <div class="gallery-wizard-label">Wizard #666</div>
+        </div>
+        
+        <div class="gallery-wizard">
+            <div style="width: 100%; height: 100%; background: #aaabbc; border: 3px solid #040104; border-radius: 100px 100px 20px 20px; position: relative;">
+                <div style="position: absolute; top: 30%; left: 50%; transform: translateX(-50%); width: 60%; height: 40%; background: #e9ca1a; border: 2px solid #040104; border-radius: 50%;"></div>
+            </div>
+            <div class="gallery-wizard-label">Wizard #999</div>
+        </div>
+    </section>
+    
+    <!-- Why MIM Section -->
+    <section class="why-mim" id="why">
+        <h2>Why Magic Internet Money?</h2>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>Best Ticker</h3>
+                <p>$MIM - Magic Internet Money. The perfect ticker for the perfect meme.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Best CTA</h3>
+                <p>"Join us" - Simple, powerful, inclusive. The original wizard's call to action.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Timeless Art</h3>
+                <p>Dope, universal, timeless MS Paint art that captures the soul of early Bitcoin.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Deep Provenance</h3>
+                <p>Deep Bitcoin provenance, culture, and history from 2013's r/bitcoin community.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Hard-Capped</h3>
+                <p>Non-inflationary, hard-capped supply. Impossible to dilute with another shiny animal coin.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Pure Bitcoin</h3>
+                <p>Native to the motherchain—pure Bitcoin, no bridges, no wrapping, no gimmicks.</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 60px; padding: 40px; background: #f5f5f0; border: 3px solid #040104; border-radius: 20px; max-width: 800px; margin-left: auto; margin-right: auto; transform: rotate(-1deg);">
+            <p style="font-size: 1.4rem; line-height: 1.8;">
+                <strong>Bitcoin's block subsidy is decreasing. The on-chain economy is the future.</strong><br><br>
+                This is the pristine holy grail of meme tokens—an undilutable, culturally significant asset that lives and breathes Bitcoin. 100% aligned with Bitcoin's long-term success.<br><br>
+                <em>If you get it, you get it.</em>
+            </p>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="wonky-footer">
+        <h3 style="font-size: 2rem; margin-bottom: 20px;">✨ Magic Internet Money ✨</h3>
+        <p style="font-size: 1.2rem;">© 2013-∞ Bitcoin Wizards | Pure Culture, No Utility, Maximum Whimsy</p>
+        <p style="margin-top: 20px; opacity: 0.7;">Est. 2013 by @mavensbot | Hodl the Magic</p>
+        <p style="margin-top: 40px; font-size: 0.9rem; opacity: 0.6; max-width: 800px; margin-left: auto; margin-right: auto;">
+            By engaging with Magic Internet Money, participants agree to embrace its lack of utility as part of its charm, revel in the cultural history it represents, and acknowledge that the only sorcery involved is the one that conjures smiles.
+        </p>
+    </footer>
+    
+    <script>
+        // SUPER CRAZY FEATURES
+        
+        // Matrix rain effect
+        function createMatrixRain() {
+            const matrixContainer = document.getElementById('matrixRain');
+            const chars = '₿01MIM♦♠♣♥WIZARDBITCOIN';
+            
+            for (let i = 0; i < 50; i++) {
+                const drop = document.createElement('div');
+                drop.className = 'matrix-drop';
+                drop.style.left = Math.random() * 100 + '%';
+                drop.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                drop.style.animationDelay = Math.random() * 5 + 's';
+                drop.textContent = chars[Math.floor(Math.random() * chars.length)];
+                matrixContainer.appendChild(drop);
+            }
+        }
+        createMatrixRain();
+        
+        // Konami code easter egg
+        let konamiCode = [];
+        const konamiPattern = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        
+        document.addEventListener('keydown', (e) => {
+            konamiCode.push(e.key);
+            konamiCode = konamiCode.slice(-10);
+            
+            if (konamiCode.join(',') === konamiPattern.join(',')) {
+                activateSuperWizardMode();
+            }
+        });
+        
+        function activateSuperWizardMode() {
+            const wizard = document.getElementById('mainWizard');
+            wizard.classList.add('wizard-powered', 'wizard-super-saiyan');
+            document.body.classList.add('shake-screen');
+            
+            // Create laser eyes
+            const laserContainer = document.createElement('div');
+            laserContainer.className = 'laser-eyes';
+            wizard.appendChild(laserContainer);
+            
+            const leftLaser = document.createElement('div');
+            leftLaser.className = 'laser-beam';
+            leftLaser.style.top = '45%';
+            leftLaser.style.left = '35%';
+            
+            const rightLaser = document.createElement('div');
+            rightLaser.className = 'laser-beam';
+            rightLaser.style.top = '45%';
+            rightLaser.style.left = '55%';
+            
+            laserContainer.appendChild(leftLaser);
+            laserContainer.appendChild(rightLaser);
+            laserContainer.style.display = 'block';
+            
+            // Epic announcement
+            const announcement = document.createElement('div');
+            announcement.style.cssText = `
+                position: fixed;
+                top: 20%;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 4rem;
+                color: #f3ff00;
+                text-shadow: 0 0 20px #f3ff00;
+                z-index: 9999;
+                animation: pulse 0.5s ease-in-out infinite;
+                font-family: 'Derp', 'Permanent Marker', cursive;
+            `;
+            announcement.textContent = 'UNLIMITED POWER!!!';
+            document.body.appendChild(announcement);
+            
+            // Spawn pills everywhere
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const pill = document.createElement('div');
+                    pill.className = 'pill-rain';
+                    pill.textContent = '💊';
+                    pill.style.left = Math.random() * 100 + '%';
+                    pill.style.animationDelay = Math.random() * 2 + 's';
+                    document.body.appendChild(pill);
+                    setTimeout(() => pill.remove(), 10000);
+                }, i * 100);
+            }
+            
+            setTimeout(() => {
+                wizard.classList.remove('wizard-powered', 'wizard-super-saiyan');
+                document.body.classList.remove('shake-screen');
+                laserContainer.remove();
+                announcement.remove();
+            }, 5000);
+        }
+        
+        // Secret pill button
+        let secretClickCount = 0;
+        document.querySelector('.mim-ticker').addEventListener('click', () => {
+            secretClickCount++;
+            if (secretClickCount === 7) {
+                document.body.style.animation = 'pulse-bg 2s ease-in-out infinite';
+                alert('🧙‍♂️💊 You\'ve unlocked the secret pill stash! 💊🧙‍♂️');
+                secretClickCount = 0;
+            }
+        });
+        
+        // Random wizard facts
+        const wizardFacts = [
+            "The original wizard was drawn in 3 minutes",
+            "MavensBot still hodls wizard #70",
+            "The wizard has never sold a single Bitcoin",
+            "MS Paint is the wizard's favorite IDE",
+            "The wizard's beard contains ancient Bitcoin keys",
+            "Pills make the wizard stronger",
+            "The wizard predicted $100k Bitcoin in 2013"
+        ];
+        
+        // Voice announcements (using speech synthesis)
+        function speakWizardWisdom() {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(wizardFacts[Math.floor(Math.random() * wizardFacts.length)]);
+                utterance.pitch = 0.5;
+                utterance.rate = 0.8;
+                speechSynthesis.speak(utterance);
+            }
+        }
+        
+        // Click wizard 10 times for voice
+        let voiceClickCount = 0;
+        mainWizard.addEventListener('click', () => {
+            voiceClickCount++;
+            if (voiceClickCount === 10) {
+                speakWizardWisdom();
+                voiceClickCount = 0;
+            }
+        });
+        
+        // Bitcoin vortex background
+        const vortex = document.createElement('div');
+        vortex.className = 'bitcoin-vortex';
+        document.body.appendChild(vortex);
+        
+        // Wizard part randomizer
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'r') {
+                const parts = ['hat', 'robe', 'beard', 'eyes', 'mouth'];
+                const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+                parts.forEach(part => {
+                    const element = document.querySelector(`.wizard-${part} img`);
+                    if (element) {
+                        element.style.filter = `hue-rotate(${Math.random() * 360}deg)`;
+                    }
+                });
+            }
+        });
+        
+        // Mouse position heat map
+        let heatMap = {};
+        document.addEventListener('mousemove', (e) => {
+            const key = `${Math.floor(e.clientX / 50)},${Math.floor(e.clientY / 50)}`;
+            heatMap[key] = (heatMap[key] || 0) + 1;
+            
+            if (heatMap[key] > 50) {
+                // Create heat explosion
+                const explosion = document.createElement('div');
+                explosion.style.cssText = `
+                    position: fixed;
+                    left: ${e.clientX}px;
+                    top: ${e.clientY}px;
+                    width: 100px;
+                    height: 100px;
+                    background: radial-gradient(circle, #ff0000, transparent);
+                    border-radius: 50%;
+                    transform: translate(-50%, -50%) scale(0);
+                    animation: explode 1s ease-out forwards;
+                    pointer-events: none;
+                    z-index: 9999;
+                `;
+                document.body.appendChild(explosion);
+                setTimeout(() => explosion.remove(), 1000);
+                heatMap[key] = 0;
+            }
+        });
+        
+        // Add explode animation
+        const explodeStyle = document.createElement('style');
+        explodeStyle.textContent = `
+            @keyframes explode {
+                to { transform: translate(-50%, -50%) scale(10); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(explodeStyle);
+        
+        // Add spin animation
+        const style = document.createElement('style');
+        style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+        
+        // Cursor trail effect - enhanced magic wand sparkles
+        let mouseX = 0, mouseY = 0;
+        let lastMouseX = 0, lastMouseY = 0;
+        let trailInterval;
+        
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+        
+        function createMagicTrail() {
+            // Only create trail if mouse has moved
+            if (Math.abs(mouseX - lastMouseX) > 2 || Math.abs(mouseY - lastMouseY) > 2) {
+                // Create multiple particles for more magical effect
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        if (Math.random() > 0.5) {
+                            // Create sparkle
+                            const sparkle = document.createElement('div');
+                            sparkle.className = 'sparkle-trail';
+                            sparkle.style.left = (mouseX + Math.random() * 10 - 5) + 'px';
+                            sparkle.style.top = (mouseY + Math.random() * 10 - 5) + 'px';
+                            sparkle.style.background = Math.random() > 0.5 ? '#f3ff00' : '#f09f00';
+                            
+                            // Set random movement direction
+                            sparkle.style.setProperty('--dx', `${Math.random() * 40 - 20}px`);
+                            sparkle.style.setProperty('--dy', `${Math.random() * 40 - 20}px`);
+                            
+                            document.body.appendChild(sparkle);
+                            setTimeout(() => sparkle.remove(), 1000);
+                        } else {
+                            // Create star
+                            const star = document.createElement('div');
+                            star.className = 'star-trail';
+                            star.innerHTML = '✨';
+                            star.style.left = (mouseX + Math.random() * 10 - 5) + 'px';
+                            star.style.top = (mouseY + Math.random() * 10 - 5) + 'px';
+                            
+                            // Set random horizontal movement
+                            star.style.setProperty('--sx', `${Math.random() * 100 - 50}px`);
+                            
+                            document.body.appendChild(star);
+                            setTimeout(() => star.remove(), 1500);
+                        }
+                    }, i * 50);
+                }
+                
+                lastMouseX = mouseX;
+                lastMouseY = mouseY;
+            }
+        }
+        
+        // Enable continuous trail
+        setInterval(createMagicTrail, 100);
+        
+        // Gallery wizard interactions
+        document.querySelectorAll('.gallery-wizard').forEach(wizard => {
+            wizard.addEventListener('click', function() {
+                this.style.transform = 'translateY(-10px) rotate(360deg) scale(1.1)';
+                
+                // Create magic effect
+                const magic = document.createElement('div');
+                magic.textContent = '✨';
+                magic.style.cssText = `
+                    position: absolute;
+                    top: -20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    font-size: 2rem;
+                    animation: floatUp 1s ease-out forwards;
+                `;
+                this.appendChild(magic);
+                
+                setTimeout(() => {
+                    this.style.transform = 'translateY(-10px) rotate(5deg)';
+                    magic.remove();
+                }, 1000);
+            });
+        });
+        
+        // Add float up animation
+        const floatUpStyle = document.createElement('style');
+        floatUpStyle.textContent = `
+            @keyframes floatUp {
+                to { 
+                    transform: translateX(-50%) translateY(-50px); 
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(floatUpStyle);
+        
+        // Smooth scrolling for nav links
+        document.querySelectorAll('.nav-btn, .join-btn').forEach(link => {
+            link.addEventListener('click', (e) => {
+                if (link.getAttribute('href').startsWith('#')) {
+                    e.preventDefault();
+                    const target = document.querySelector(link.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+        
+        // Enable extra sparkles on hover over main wizard
+        mainWizard.addEventListener('mouseenter', () => {
+            mainWizard.style.filter = 'drop-shadow(0 0 20px #f3ff00)';
+        });
+        
+        mainWizard.addEventListener('mouseleave', () => {
+            mainWizard.style.filter = '';
+        });
+        
+        // Console easter egg
+        console.log('%c🧙‍♂️ MAGIC INTERNET MONEY 🧙‍♂️', 'font-size: 30px; color: #2f53fe; text-shadow: 2px 2px 0 #f3ff00;');
+        console.log('%cYou found the secret wizard console!', 'color: #6ef405; font-size: 14px;');
+        console.log('%cType wizardMode() to activate maximum magic', 'color: #f09f00; font-size: 12px;');
+        console.log('%cType mimToken() to learn the truth', 'color: #67d1e3; font-size: 12px;');
+        
+        window.wizardMode = function() {
+            document.body.style.animation = 'spin 2s linear';
+            setTimeout(() => {
+                document.body.style.animation = '';
+                alert('🧙‍♂️ You\'ve been blessed by the Bitcoin Wizard!\n\nMay your hodlings be forever strong and your memes forever dank!');
+            }, 2000);
+        };
+        
+        window.mimToken = function() {
+            console.log('%c' + `
+╔═══════════════════════════════════════╗
+║         MAGIC INTERNET MONEY          ║
+║              THE TRUTH                ║
+╠═══════════════════════════════════════╣
+║  • No presale, no premine            ║
+║  • 100% fair launch                  ║
+║  • Every token in the wild           ║
+║  • Pure Bitcoin culture              ║
+║  • Zero utility, maximum whimsy      ║
+║  • If you get it, you get it         ║
+╚═══════════════════════════════════════╝
+            `, 'color: #f3ff00; background: #040104; font-family: monospace; padding: 10px;');
+        };
+        
+        // Random wizard appearances
+        function createFloatingWizard() {
+            const wizard = document.createElement('div');
+            wizard.style.cssText = `
+                position: fixed;
+                width: 50px;
+                height: 70px;
+                background: #2f53fe;
+                border: 2px solid #040104;
+                border-radius: 25px 25px 5px 5px;
+                left: -100px;
+                top: ${Math.random() * window.innerHeight}px;
+                z-index: 10;
+                animation: floatAcross 15s linear;
+            `;
+            
+            // Add a simple hat
+            const hat = document.createElement('div');
+            hat.style.cssText = `
+                position: absolute;
+                width: 0;
+                height: 0;
+                border-left: 20px solid transparent;
+                border-right: 20px solid transparent;
+                border-bottom: 30px solid #2f53fe;
+                top: -25px;
+                left: 5px;
+                filter: drop-shadow(1px 1px 0 #040104);
+            `;
+            wizard.appendChild(hat);
+            
+            // Add sparkle
+            const sparkle = document.createElement('div');
+            sparkle.textContent = '✨';
+            sparkle.style.cssText = `
+                position: absolute;
+                top: -10px;
+                right: -10px;
+                font-size: 20px;
+                animation: sparkle 1s ease-in-out infinite;
+            `;
+            wizard.appendChild(sparkle);
+            
+            document.body.appendChild(wizard);
+            
+            wizard.addEventListener('animationend', () => wizard.remove());
+        }
+        
+        // Add floating across animation
+        const floatStyle = document.createElement('style');
+        floatStyle.textContent = `
+            @keyframes floatAcross {
+                from { transform: translateX(0) rotate(0deg); }
+                to { transform: translateX(calc(100vw + 200px)) rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(floatStyle);
+        
+        // Spawn floating wizards occasionally
+        setInterval(createFloatingWizard, 10000);
+        
+        // MIM ticker glow effect on hover
+        const mimTicker = document.querySelector('.mim-ticker');
+        mimTicker.addEventListener('mouseenter', () => {
+            mimTicker.style.boxShadow = '0 0 20px #f3ff00';
+            mimTicker.style.transform = 'rotate(-5deg) scale(1.1)';
+        });
+        
+        mimTicker.addEventListener('mouseleave', () => {
+            mimTicker.style.boxShadow = '';
+            mimTicker.style.transform = 'rotate(-5deg)';
+        });
+    </script>
+</body>
+</html>
