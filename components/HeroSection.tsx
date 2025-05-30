@@ -114,7 +114,7 @@ export default function HeroSection() {
           </p>
         </div>
         
-        <a href="https://discord.gg/bitcoinwizard" className="mt-16 mx-auto block w-fit px-10 py-6 bg-bitcoin-orange text-wizard-black border-4 border-wizard-black rounded-[20px_5px_20px_5px] text-3xl md:text-4xl font-derp -rotate-2 hover:rotate-2 hover:scale-110 hover:bg-magic-yellow transition-all shadow-[0_0_2px_#040104] hover:shadow-[0_0_4px_#040104] animate-rainbow-glow">
+        <a href="#community" className="mt-16 mx-auto block w-fit px-10 py-6 bg-bitcoin-orange text-wizard-black border-4 border-wizard-black rounded-[20px_5px_20px_5px] text-3xl md:text-4xl font-derp -rotate-2 hover:rotate-2 hover:scale-110 hover:bg-magic-yellow transition-all shadow-[0_0_2px_#040104] hover:shadow-[0_0_4px_#040104] animate-rainbow-glow">
           Join Us
         </a>
       </div>

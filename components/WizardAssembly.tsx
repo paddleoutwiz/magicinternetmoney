@@ -30,7 +30,7 @@ export default function WizardAssembly({ onClick, clickCount }: WizardAssemblyPr
       // Show pill spinner
       setShowPillSpinner(true)
       
-      // Create pill explosion from mouth
+      // Create pill explosion from mouth (adjusted for center of wizard)
       const mouth = e.currentTarget.getBoundingClientRect()
       const centerX = mouth.left + mouth.width / 2
       const centerY = mouth.top + mouth.height / 2
@@ -106,7 +106,7 @@ export default function WizardAssembly({ onClick, clickCount }: WizardAssemblyPr
         }, 3000)
         break
       case 7:
-        // Summon mini wizards
+        // Summon mini wizards (using the complete wizard image)
         console.log('%c🧙‍♂️ SUMMONING WIZARD FRIENDS!', 'color: #6ef405; font-size: 20px;')
         for (let i = 0; i < 5; i++) {
           setTimeout(() => {
@@ -117,9 +117,7 @@ export default function WizardAssembly({ onClick, clickCount }: WizardAssemblyPr
             miniWizard.style.animationDelay = `${Math.random() * 2}s`
             miniWizard.innerHTML = `
               <div class="relative w-full h-full">
-                <img src="/examples/parts/robe/og.png" alt="Mini Wizard" class="absolute inset-0 w-full h-full object-contain" />
-                <img src="/examples/parts/hat/og.png" alt="Mini Hat" class="absolute inset-0 w-full h-full object-contain" />
-                <img src="/examples/parts/beard/og.png" alt="Mini Beard" class="absolute inset-0 w-full h-full object-contain" />
+                <img src="/examples/complete_wizard.png" alt="Mini Wizard" class="w-full h-full object-contain" />
                 <div class="absolute top-0 left-1/2 -translate-x-1/2 text-2xl animate-pulse">✨</div>
               </div>
             `
@@ -184,7 +182,7 @@ export default function WizardAssembly({ onClick, clickCount }: WizardAssemblyPr
   return (
     <div 
       id="mainWizard"
-      className={`relative w-[400px] h-[400px] animate-float cursor-pointer transition-all hover:scale-105 hover:-rotate-[5deg] ${
+      className={`relative w-[500px] h-[500px] animate-float cursor-pointer transition-all hover:scale-105 hover:-rotate-[5deg] ${
         isSuper ? 'animate-pulse-crazy' : ''
       } ${wizardState === 'ultimate' ? 'animate-spin' : ''} ${
         clickFeedback ? 'scale-95' : ''
@@ -198,90 +196,37 @@ export default function WizardAssembly({ onClick, clickCount }: WizardAssemblyPr
       }}
     >
       <div className={`relative w-full h-full ${isSuper ? 'animate-rainbow-glow' : ''}`}>
-        {/* Wizard parts in correct z-index order */}
-        <div className="absolute inset-0 z-[2] flex items-center justify-center">
+        {/* Complete wizard image */}
+        <div className="absolute inset-0 z-[1] flex items-center justify-center" style={{ transform: 'translateX(20px)' }}>
           <Image 
-            src="/examples/parts/face/og.png" 
-            alt="Face" 
-            fill 
-            className="object-contain" 
+            src="/examples/complete_wizard.png" 
+            alt="Bitcoin Wizard" 
+            width={548}
+            height={548}
+            className="object-contain w-full h-full" 
             priority
-          />
-        </div>
-        <div className="absolute inset-0 z-[3] flex items-center justify-center">
-          <Image 
-            src="/examples/parts/nose/neutral.png" 
-            alt="Nose" 
-            fill 
-            className="object-contain"
-          />
-        </div>
-        <div className="absolute inset-0 z-[4] flex items-center justify-center">
-          <Image 
-            src="/examples/parts/eyes/neutral.png" 
-            alt="Eyes" 
-            fill 
-            className="object-contain"
-          />
-        </div>
-        <div className="absolute inset-0 z-[5] flex items-center justify-center">
-          <Image 
-            src="/examples/parts/robe/og.png" 
-            alt="Robe" 
-            fill 
-            className="object-contain"
             style={{
               filter: isSuper ? 'hue-rotate(270deg) saturate(2)' : ''
             }}
           />
         </div>
-        <div className="absolute inset-0 z-[6] flex items-center justify-center">
-          <Image 
-            src="/examples/parts/beard/og.png" 
-            alt="Beard" 
-            fill 
-            className="object-contain"
-          />
-        </div>
-        <div className="absolute inset-0 z-[7] opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+        
+        {/* Fire overlay - animated separately */}
+        <div className="absolute inset-0 z-[7] opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center" style={{ transform: 'translateX(20px)' }}>
           <Image 
             src="/examples/parts/lefthand/fire.png" 
             alt="Fire" 
             fill 
-            className="object-contain"
+            className="object-contain animate-pulse"
           />
         </div>
-        <div className="absolute inset-0 z-[9] flex items-center justify-center">
-          <Image 
-            src="/examples/parts/hat/og.png" 
-            alt="Hat" 
-            fill 
-            className="object-contain"
-            style={{
-              filter: isSuper ? 'hue-rotate(180deg) brightness(1.5)' : ''
-            }}
-          />
-        </div>
+        
+        {/* Clickable mouth area for pill overdose easter egg */}
         <div 
-          className="absolute inset-0 z-[10] cursor-pointer hover:scale-110 transition-transform flex items-center justify-center"
+          className="absolute bottom-[30%] left-1/2 -translate-x-1/2 w-20 h-20 z-[10] cursor-pointer hover:scale-110 transition-transform"
           onClick={handleMouthClick}
           title="Click 3 times for a surprise!"
-        >
-          <Image 
-            src="/examples/parts/mouth/neutral.png" 
-            alt="Mouth" 
-            fill 
-            className="object-contain"
-          />
-        </div>
-        <div className="absolute inset-0 z-[11] flex items-center justify-center">
-          <Image 
-            src="/examples/parts/text/rbitcoin.png" 
-            alt="r/bitcoin" 
-            fill 
-            className="object-contain"
-          />
-        </div>
+        />
       </div>
       
       {/* Pill Spinner Overlay */}
@@ -299,8 +244,8 @@ export default function WizardAssembly({ onClick, clickCount }: WizardAssemblyPr
           key={sparkle.id}
           className="absolute w-4 h-4 bg-magic-yellow rounded-full pointer-events-none"
           style={{ 
-            left: `${200 + sparkle.x}px`, 
-            top: `${200 + sparkle.y}px`,
+            left: `${250 + sparkle.x}px`, 
+            top: `${250 + sparkle.y}px`,
             boxShadow: '0 0 10px #f3ff00, 0 0 20px #f3ff00',
             animation: 'sparkle 1s ease-out forwards'
           }}

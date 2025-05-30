@@ -23,6 +23,28 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
 
+/* ==================== CSS VARIABLES ==================== */
+:root {
+  /* Magic colors */
+  --color-magic-yellow: #f3ff00;
+  --color-magic-orange: #f09f00;
+  --color-magic-brown: #9d4602;
+  
+  /* Glitch colors */
+  --color-glitch-magenta: #ff00ff;
+  --color-glitch-cyan: #00ffff;
+  
+  /* Animation durations */
+  --anim-duration-fast: 0.3s;
+  --anim-duration-normal: 0.5s;
+  --anim-duration-slow: 1s;
+  --anim-duration-slower: 2s;
+  
+  /* Common values */
+  --border-width: 3px;
+  --shadow-offset: 5px;
+}
+
 /* ==================== BASE STYLES ==================== */
 @layer base {
   * {
@@ -33,6 +55,7 @@
     font-family: 'Derp', 'Permanent Marker', cursive;
   }
   
+  /* Typography hierarchy */
   h1 { @apply font-derp tracking-wider text-6xl md:text-8xl text-center; }
   h2 { @apply font-derp tracking-wider text-4xl md:text-6xl text-center; }
   h3 { @apply font-derp tracking-wider text-3xl md:text-4xl text-center; }
@@ -50,16 +73,16 @@
     cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><defs><linearGradient id="wandGlow" x1="0%25" y1="0%25" x2="100%25" y2="100%25"><stop offset="0%25" style="stop-color:%23f3ff00"/><stop offset="50%25" style="stop-color:%23f09f00"/><stop offset="100%25" style="stop-color:%239d4602"/></linearGradient></defs><g transform="rotate(-45 18 18)"><rect x="16" y="4" width="4" height="24" fill="url(%23wandGlow)" stroke="%23040104" stroke-width="1"/><polygon points="18,4 14,0 18,-2 22,0" fill="%23f3ff00" stroke="%23040104" stroke-width="1"/><circle cx="14" cy="2" r="3" fill="%23f3ff00" opacity="0.6"><animate attributeName="r" values="2;4;2" dur="0.8s" repeatCount="indefinite"/></circle><circle cx="22" cy="1" r="2.5" fill="%23f3ff00" opacity="0.6"><animate attributeName="r" values="1.5;3;1.5" dur="0.8s" begin="0.2s" repeatCount="indefinite"/></circle><circle cx="18" cy="-1" r="2" fill="%23f3ff00" opacity="0.6"><animate attributeName="r" values="1;2.5;1" dur="0.8s" begin="0.4s" repeatCount="indefinite"/></circle></g></svg>'), auto !important;
   }
   
-  /* Hand-drawn border effect */
+  /* Border effects */
   .hand-drawn-border {
-    border: 3px solid #040104;
+    border: var(--border-width) solid #040104;
     border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
   }
   
   /* Glitch text effect */
   .glitch-text {
     position: relative;
-    animation: glitch 0.5s infinite;
+    animation: glitch var(--anim-duration-normal) infinite;
   }
 
   .glitch-text::before,
@@ -73,15 +96,15 @@
   }
 
   .glitch-text::before {
-    animation: glitch 0.5s infinite;
-    color: #ff00ff;
+    animation: glitch var(--anim-duration-normal) infinite;
+    color: var(--color-glitch-magenta);
     z-index: -1;
     animation-delay: 0.1s;
   }
 
   .glitch-text::after {
-    animation: glitch 0.5s infinite;
-    color: #00ffff;
+    animation: glitch var(--anim-duration-normal) infinite;
+    color: var(--color-glitch-cyan);
     z-index: -2;
     animation-delay: 0.2s;
   }
@@ -95,13 +118,13 @@
 /* ==================== UTILITIES ==================== */
 @layer utilities {
   /* Z-index layers - organized from lowest to highest */
-  .z-matrix { z-index: 10; }
-  .z-vortex { z-index: 20; }
-  .z-content { z-index: 100; }
-  .z-effects { z-index: 1000; }
-  .z-ui { z-index: 10000; }
-  .z-pills { z-index: 100000; }
-  .z-cursor { z-index: 999999; }
+  .z-matrix { z-index: 10; }      /* Matrix rain background */
+  .z-vortex { z-index: 20; }      /* Bitcoin vortex effect */
+  .z-content { z-index: 100; }    /* Main content */
+  .z-effects { z-index: 1000; }   /* Visual effects */
+  .z-ui { z-index: 10000; }       /* UI elements */
+  .z-pills { z-index: 100000; }   /* Pill effects */
+  .z-cursor { z-index: 999999; }  /* Cursor trail */
   
   /* Animation utilities */
   .animate-pill-float {
@@ -109,11 +132,11 @@
   }
 
   .animate-screen-shake {
-    animation: screen-shake 0.5s ease-in-out;
+    animation: screen-shake var(--anim-duration-normal) ease-in-out;
   }
 
   .animate-screen-shake-intense {
-    animation: screen-shake-intense 0.3s ease-in-out infinite;
+    animation: screen-shake-intense var(--anim-duration-fast) ease-in-out infinite;
   }
 
   .animate-pulse-bg {
@@ -122,7 +145,8 @@
 }
 
 /* ==================== KEYFRAME ANIMATIONS ==================== */
-/* Movement animations */
+
+/* === Movement Animations === */
 @keyframes float {
   0%, 100% { transform: translateY(0) rotate(-2deg); }
   50% { transform: translateY(-20px) rotate(2deg); }
@@ -138,7 +162,18 @@
   100% { transform: translateX(calc(100vw + 100px)) translateY(-100px) rotate(360deg); }
 }
 
-/* Explosion & particle effects */
+@keyframes floatUp {
+  0% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-50px);
+    opacity: 0;
+  }
+}
+
+/* === Explosion & Particle Effects === */
 @keyframes explode {
   0% { 
     transform: translate(-50%, -50%) scale(1) rotate(0deg); 
@@ -179,7 +214,7 @@
   }
 }
 
-/* Pill animations */
+/* === Pill Animations === */
 @keyframes pill-spin {
   0% { transform: rotate(0deg) scale(1); }
   50% { transform: rotate(180deg) scale(1.2); }
@@ -206,7 +241,7 @@
   }
 }
 
-/* Glitch effects */
+/* === Glitch Effects === */
 @keyframes glitch {
   0%, 100% { transform: translate(0); }
   20% { transform: translate(-2px, 2px); }
@@ -261,7 +296,7 @@
   }
 }
 
-/* Color & filter animations */
+/* === Color & Filter Animations === */
 @keyframes chaos-mode {
   0% { filter: hue-rotate(0deg) contrast(100%) brightness(100%); }
   25% { filter: hue-rotate(90deg) contrast(150%) brightness(110%); }
@@ -308,7 +343,7 @@
   }
 }
 
-/* Screen effects */
+/* === Screen Effects === */
 @keyframes screen-shake {
   0%, 100% { transform: translate(0, 0) rotate(0deg); }
   10% { transform: translate(-20px, -20px) rotate(-1deg); }
@@ -335,7 +370,7 @@
   90% { transform: translate(-30px, -30px) rotate(-3deg) scale(1.01); }
 }
 
-/* Special effects */
+/* === Special Effects === */
 @keyframes text-3d {
   0% { 
     transform: translate(-50%, -50%) rotateX(15deg) rotateY(-15deg);

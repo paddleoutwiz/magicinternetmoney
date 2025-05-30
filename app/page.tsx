@@ -1,4 +1,5 @@
 import HeroSection from '@/components/HeroSection'
+import CommunityLinks from '@/components/CommunityLinks'
 import StorySection from '@/components/StorySection'
 import FairLaunchSection from '@/components/FairLaunchSection'
 import WizardGallery from '@/components/WizardGallery'
@@ -26,6 +27,7 @@ export default function Home() {
       
       <main className="relative z-10">
         <HeroSection />
+        <CommunityLinks />
         <StorySection />
         <FairLaunchSection />
         <WizardGallery />

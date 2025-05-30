@@ -131,21 +131,35 @@ export default function SuperCrazyFeatures() {
   
   const speakWizdom = useCallback(() => {
     const wisdoms = [
-      "HODL is the way",
-      "Magic Internet Money is real",
-      "Pills make wizards stronger",
-      "MS Paint is the only true art",
-      "Bitcoin Wizards never sell",
-      "The moon is just the beginning",
-      "In code we trust"
+      "NO MMMMAAADDDDD!!!",
+      "Join Us!",
+      "We are frens",
+      "Are you satisfied?",
+      "Are you Margaret Anderson?",
+      "Check your wallets",
+      "MAGIC INTERNET MONEY",
+	  "Peer-to-peer Magic Internet Money: zap sats from your wand to theirs—no financial institutions, just pure blockchain magic!"
     ]
     const wisdom = wisdoms[Math.floor(Math.random() * wisdoms.length)]
     
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(wisdom)
-      utterance.pitch = 0.5
-      utterance.rate = 0.8
-      utterance.volume = 0.5
+      
+      // Get available voices
+      const voices = speechSynthesis.getVoices()
+      
+      if (voices.length > 0) {
+        // Select a random voice
+        const randomVoice = voices[Math.floor(Math.random() * voices.length)]
+        utterance.voice = randomVoice
+        console.log(`%c🗣️ Speaking with: ${randomVoice.name}`, 'color: #67d1e3; font-size: 12px;')
+      }
+      
+      // Randomize pitch, rate, and volume for variety
+      utterance.pitch = 0.3 + Math.random() * 1.4  // Random between 0.3 and 1.7
+      utterance.rate = 0.5 + Math.random() * 1.0   // Random between 0.5 and 1.5
+      utterance.volume = 0.3 + Math.random() * 0.4 // Random between 0.3 and 0.7
+      
       speechSynthesis.speak(utterance)
     }
     
@@ -402,7 +416,7 @@ export default function SuperCrazyFeatures() {
     console.log('%c' + `
 ╔══════════════════════════════════════════════════════╗
 ║                                                      ║
-║     🧙‍♂️  BITCOIN WIZARDS CONSOLE  🧙‍♂️              ║
+║     🧙‍♂️  BITCOIN WIZARDS CONSOLE  🧙‍♂️                 ║
 ║                                                      ║
 ║     Welcome to the secret wizard terminal!           ║
 ║                                                      ║
@@ -473,19 +487,13 @@ export default function SuperCrazyFeatures() {
     
     window.addEventListener('keydown', handleKeydown)
     
-    // Chaos timer - site gets crazier over time (less frequent checks for performance)
+    // Chaos timer
     const chaosTimer = setInterval(() => {
-      const timeOnSite = Date.now() - (window.loadTime || Date.now())
-      if (timeOnSite > 60000 && chaosLevel < 10) { // After 1 minute
-        setChaosLevel(prev => {
-          const newLevel = Math.min(prev + 1, 10)
-          if (newLevel === 5) {
-            console.log('%c⚠️ CHAOS LEVEL INCREASING...', 'color: #ff0000; font-size: 20px;')
-          }
-          return newLevel
-        })
-      }
-    }, 30000)
+	  const timeOnSite = Date.now() - (window.loadTime || Date.now())
+	  if (timeOnSite > 60000 && chaosLevel < 10) { // After 1 minute
+	    increaseChaos() // Use increaseChaos instead of setChaosLevel directly
+	  }
+	}, 30000)
     
     // Listen for custom events
     const handleSuperMode = () => activateUltimatePower()

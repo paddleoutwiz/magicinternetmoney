@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [],
+    domains: ['ord-mirror.magiceden.dev'],
     unoptimized: true, // For local images
   },
 }

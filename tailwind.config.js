@@ -62,9 +62,10 @@ const config: Config = {
         'screen-shake': 'screen-shake 0.5s ease-in-out',
         
         // Special effects
-        'vortex-spin': 'spin 30s linear infinite',
+		'vortex-spin': 'spin 30s linear infinite',
         'laser-shoot': 'laser-shoot 0.5s ease-out forwards',
         'pulse-crazy': 'pulse-crazy 2s ease-in-out infinite',
+        'float-up': 'floatUp 1s ease-out forwards',
       },
       keyframes: {
         // Only add keyframes not defined in globals.css
