@@ -17,15 +17,35 @@ export default function SuperCrazyFeatures() {
   const [pillsCollected, setPillsCollected] = useState(0)
   const [showPillReward, setShowPillReward] = useState(false)
   const chaosIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const activePillsRef = useRef(new Set<HTMLElement>())
+  const mouseMoveListenerRef = useRef<((e: MouseEvent) => void) | null>(null)
+  
+  // Cleanup old pills periodically
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      activePillsRef.current.forEach(pill => {
+        const rect = pill.getBoundingClientRect()
+        if (rect.top > window.innerHeight + 100) {
+          pill.remove()
+          activePillsRef.current.delete(pill)
+        }
+      })
+    }, 3000)
+    
+    return () => clearInterval(cleanupInterval)
+  }, [])
   
   // Optimized single pill spawner
   const spawnSinglePill = useCallback(() => {
     const pill = document.createElement('div')
-    pill.className = 'fixed cursor-pointer z-pills'
+    pill.className = 'fixed cursor-pointer z-pills will-change-transform'
     pill.style.left = Math.random() * window.innerWidth + 'px'
     pill.style.top = '-100px'
     pill.style.width = '60px'
     pill.style.height = '60px'
+    
+    // Track active pills
+    activePillsRef.current.add(pill)
     
     // Create pill image
     const img = document.createElement('img')
@@ -36,14 +56,18 @@ export default function SuperCrazyFeatures() {
     
     pill.appendChild(img)
     
-    // Falling animation
+    // Falling animation with GPU acceleration
     pill.style.animation = `pill-fall ${Math.random() * 5 + 5}s linear`
+    pill.style.transform = 'translateZ(0)' // Force GPU acceleration
     
     // Make pills interactive
-    pill.onclick = () => {
+    pill.onclick = (e) => {
       // Prevent multiple clicks
       if (pill.dataset.clicked) return
       pill.dataset.clicked = 'true'
+      
+      // Remove from tracking
+      activePillsRef.current.delete(pill)
       
       // Stop falling
       pill.style.animation = 'none'
@@ -51,21 +75,25 @@ export default function SuperCrazyFeatures() {
       // Explosion effect
       img.style.animation = 'explode 0.5s ease-out forwards'
       
+      // Use DocumentFragment for better performance
+      const fragment = document.createDocumentFragment()
+      
       // Spawn mini pills
       for (let j = 0; j < 5; j++) {
         const miniPill = document.createElement('img')
         miniPill.src = '/assets/pill.png'
-        miniPill.className = 'fixed w-8 h-8 z-pills pointer-events-none'
+        miniPill.className = 'fixed w-8 h-8 z-pills pointer-events-none will-change-transform'
         miniPill.style.left = pill.style.left
         miniPill.style.top = pill.getBoundingClientRect().top + 'px'
         miniPill.style.animation = `pill-explosion 1s ease-out forwards`
         miniPill.style.setProperty('--x', `${(Math.random() - 0.5) * 200}px`)
         miniPill.style.setProperty('--y', `${(Math.random() - 0.5) * 200}px`)
         miniPill.style.animationDelay = `${j * 0.1}s`
-        document.body.appendChild(miniPill)
+        fragment.appendChild(miniPill)
         setTimeout(() => miniPill.remove(), 1000)
       }
       
+      document.body.appendChild(fragment)
       setTimeout(() => pill.remove(), 500)
       
       // Random effect
@@ -90,9 +118,13 @@ export default function SuperCrazyFeatures() {
     document.body.appendChild(pill)
     
     // Remove pill after animation completes
+    const animationDuration = parseFloat(pill.style.animationDuration) * 1000
     setTimeout(() => {
-      if (pill.parentElement) pill.remove()
-    }, 10000)
+      if (pill.parentElement) {
+        pill.remove()
+        activePillsRef.current.delete(pill)
+      }
+    }, animationDuration)
   }, [])
   
   const spawnPillRain = useCallback((count: number) => {
@@ -122,9 +154,11 @@ export default function SuperCrazyFeatures() {
   }, [])
   
   const randomizeWizard = useCallback(() => {
-    document.querySelectorAll('[class*="wizard-"]').forEach(el => {
-      if (el.tagName === 'IMG') {
-        (el as HTMLElement).style.filter = `hue-rotate(${Math.random() * 360}deg) saturate(${Math.random() * 2 + 0.5})`
+    // Cache the query result
+    const wizardImages = document.querySelectorAll('[class*="wizard-"] img, #mainWizard img')
+    wizardImages.forEach(el => {
+      if (el instanceof HTMLElement) {
+        el.style.filter = `hue-rotate(${Math.random() * 360}deg) saturate(${Math.random() * 2 + 0.5})`
       }
     })
   }, [])
@@ -169,6 +203,9 @@ export default function SuperCrazyFeatures() {
   const activateMaximumChaos = useCallback(() => {
     console.log('%c🤯 MAXIMUM CHAOS ACTIVATED!!! 🤯', 'color: #ff0000; font-size: 50px; animation: chaos-mode 1s infinite;')
     
+    // Store intervals for cleanup
+    const intervals: NodeJS.Timeout[] = []
+    
     // 0. INTENSE SCREEN SHAKING
     document.body.classList.add('animate-screen-shake')
     const shakeInterval = setInterval(() => {
@@ -182,30 +219,37 @@ export default function SuperCrazyFeatures() {
         }, 100)
       }, 100)
     }, 2000)
+    intervals.push(shakeInterval)
     
-    // 1. Selective spinning (not everything for performance)
-    document.querySelectorAll('h1, h2, h3, .nav-btn, .join-btn').forEach((el, i) => {
-      if (Math.random() > 0.5) {
-        setTimeout(() => {
-          (el as HTMLElement).style.animation = `spin ${Math.random() * 2 + 1}s linear infinite`
-        }, i * 50)
-      }
+    // 1. Selective spinning - batch DOM operations
+    const spinTargets = document.querySelectorAll('h1, h2, h3, .nav-btn, .join-btn')
+    requestAnimationFrame(() => {
+      spinTargets.forEach((el, i) => {
+        if (Math.random() > 0.5) {
+          setTimeout(() => {
+            (el as HTMLElement).style.animation = `spin ${Math.random() * 2 + 1}s linear infinite`
+          }, i * 50)
+        }
+      })
     })
     
     // 2. Rainbow everything
     document.body.style.animation = 'rainbow-background 1s linear infinite, chaos-mode 0.5s linear infinite'
     
-    // 3. Glitch text everywhere
-    document.querySelectorAll('h1, h2, h3, p').forEach(el => {
-      el.classList.add('glitch-text')
-      ;(el as HTMLElement).setAttribute('data-text', el.textContent || '')
+    // 3. Glitch text everywhere - batch operations
+    const textElements = document.querySelectorAll('h1, h2, h3, p')
+    requestAnimationFrame(() => {
+      textElements.forEach(el => {
+        el.classList.add('glitch-text')
+        ;(el as HTMLElement).setAttribute('data-text', el.textContent || '')
+      })
     })
     
     // 4. MASSIVE PILL STORM
     let pillCount = 0
-    const maxPills = 100 // Limit for performance
+    const maxPills = 100
     const pillInterval = setInterval(() => {
-      if (pillCount >= maxPills) {
+      if (pillCount >= maxPills || activePillsRef.current.size > 50) {
         clearInterval(pillInterval)
         return
       }
@@ -213,8 +257,9 @@ export default function SuperCrazyFeatures() {
       spawnSinglePill()
       pillCount++
     }, 100)
+    intervals.push(pillInterval)
     
-    // 6. Random explosions (limited for performance)
+    // 6. Random explosions
     const explosionInterval = setInterval(() => {
       const x = Math.random() * window.innerWidth
       const y = Math.random() * window.innerHeight
@@ -229,8 +274,9 @@ export default function SuperCrazyFeatures() {
       document.body.appendChild(explosion)
       setTimeout(() => explosion.remove(), 1000)
     }, 3000)
+    intervals.push(explosionInterval)
     
-    // 7. Voice chaos (optional - respect user settings)
+    // 7. Voice chaos
     let voiceInterval: NodeJS.Timeout | null = null
     if ('speechSynthesis' in window && chaosLevel >= 10) {
       const messages = ['CHAOS', 'PILLS', 'WIZARD', 'HODL', 'MOON']
@@ -241,6 +287,7 @@ export default function SuperCrazyFeatures() {
         utterance.volume = 0.3
         speechSynthesis.speak(utterance)
       }, 5000)
+      intervals.push(voiceInterval)
     }
     
     // 8. Giant pill cursor
@@ -253,19 +300,36 @@ export default function SuperCrazyFeatures() {
       document.body.appendChild(cursor)
       
       const moveCursor = (e: MouseEvent) => {
-        cursor.style.left = e.clientX - 64 + 'px'
-        cursor.style.top = e.clientY - 64 + 'px'
+        requestAnimationFrame(() => {
+          cursor.style.left = e.clientX - 64 + 'px'
+          cursor.style.top = e.clientY - 64 + 'px'
+        })
       }
       
+      mouseMoveListenerRef.current = moveCursor
       document.addEventListener('mousemove', moveCursor)
     }
     
-    // Clean up after 30 seconds to prevent performance issues
+    // Clean up after 30 seconds
     setTimeout(() => {
-      clearInterval(shakeInterval)
-      clearInterval(pillInterval)
-      clearInterval(explosionInterval)
-      if (voiceInterval) clearInterval(voiceInterval)
+      intervals.forEach(interval => clearInterval(interval))
+      document.body.classList.remove('animate-screen-shake')
+      document.body.style.animation = ''
+      document.body.style.transform = ''
+      
+      // Reset text
+      textElements.forEach(el => {
+        el.classList.remove('glitch-text')
+      })
+      
+      // Clean up cursor
+      const cursor = document.querySelector('.giant-cursor')
+      if (cursor && mouseMoveListenerRef.current) {
+        cursor.remove()
+        document.removeEventListener('mousemove', mouseMoveListenerRef.current)
+        document.body.style.cursor = ''
+      }
+      
       console.log('%c🧙‍♂️ Chaos subsiding... for now...', 'color: #67d1e3; font-size: 20px;')
     }, 30000)
   }, [chaosLevel, spawnSinglePill])
@@ -279,11 +343,13 @@ export default function SuperCrazyFeatures() {
       switch(newLevel) {
         case 1:
           // Subtle floating for all elements
-          document.querySelectorAll('h1, h2, h3, p').forEach((el, i) => {
-            if (!(el as HTMLElement).style.animation) {
-              (el as HTMLElement).style.animation = `float ${3 + Math.random() * 2}s ease-in-out infinite`
-              ;(el as HTMLElement).style.animationDelay = `${i * 0.1}s`
-            }
+          requestAnimationFrame(() => {
+            document.querySelectorAll('h1, h2, h3, p').forEach((el, i) => {
+              if (!(el as HTMLElement).style.animation) {
+                (el as HTMLElement).style.animation = `float ${3 + Math.random() * 2}s ease-in-out infinite`
+                ;(el as HTMLElement).style.animationDelay = `${i * 0.1}s`
+              }
+            })
           })
           break
           
@@ -304,7 +370,9 @@ export default function SuperCrazyFeatures() {
           // More pills start appearing
           if (!chaosIntervalRef.current) {
             chaosIntervalRef.current = setInterval(() => {
-              if (Math.random() > 0.7) spawnSinglePill()
+              if (Math.random() > 0.7 && activePillsRef.current.size < 30) {
+                spawnSinglePill()
+              }
             }, 5000)
           }
           break
@@ -333,10 +401,12 @@ export default function SuperCrazyFeatures() {
           // Everything starts rotating slowly
           document.documentElement.style.animation = 'chaos-mode 5s linear infinite'
           // More intense floating
-          document.querySelectorAll('*').forEach((el, i) => {
-            if (Math.random() > 0.9 && !(el as HTMLElement).style.animation) {
-              (el as HTMLElement).style.animation = `float ${2 + Math.random()}s ease-in-out infinite`
-            }
+          requestAnimationFrame(() => {
+            document.querySelectorAll('*').forEach((el, i) => {
+              if (Math.random() > 0.9 && !(el as HTMLElement).style.animation) {
+                (el as HTMLElement).style.animation = `float ${2 + Math.random()}s ease-in-out infinite`
+              }
+            })
           })
           break
           
@@ -350,10 +420,12 @@ export default function SuperCrazyFeatures() {
           
         case 9:
           // Almost maximum chaos - everything wobbles
-          document.querySelectorAll('div, p, h1, h2, h3').forEach((el, i) => {
-            if (Math.random() > 0.5) {
-              (el as HTMLElement).style.animation = `pulse-crazy ${Math.random() * 2 + 1}s ease-in-out infinite`
-            }
+          requestAnimationFrame(() => {
+            document.querySelectorAll('div, p, h1, h2, h3').forEach((el, i) => {
+              if (Math.random() > 0.5) {
+                (el as HTMLElement).style.animation = `pulse-crazy ${Math.random() * 2 + 1}s ease-in-out infinite`
+              }
+            })
           })
           break
           
@@ -382,7 +454,8 @@ export default function SuperCrazyFeatures() {
     `
     document.body.appendChild(announcement)
     
-    // Laser show (limited for performance)
+    // Laser show
+    const fragment = document.createDocumentFragment()
     for (let i = 0; i < 5; i++) {
       const laser = document.createElement('div')
       laser.className = 'fixed h-1 bg-red-500 z-[99998]'
@@ -391,9 +464,10 @@ export default function SuperCrazyFeatures() {
       laser.style.left = '-100vw'
       laser.style.animation = 'laser-shoot 0.5s ease-out forwards'
       laser.style.animationDelay = i * 0.1 + 's'
-      document.body.appendChild(laser)
+      fragment.appendChild(laser)
       setTimeout(() => laser.remove(), 1000)
     }
+    document.body.appendChild(fragment)
     
     // Spawn controlled amount of pills
     for (let i = 0; i < 30; i++) {
@@ -490,10 +564,10 @@ export default function SuperCrazyFeatures() {
     // Chaos timer
     const chaosTimer = setInterval(() => {
 	  const timeOnSite = Date.now() - (window.loadTime || Date.now())
-	  if (timeOnSite > 60000 && chaosLevel < 10) { // After 1 minute
-	    increaseChaos() // Use increaseChaos instead of setChaosLevel directly
+	  if (timeOnSite > 45000 && chaosLevel < 10) { // After 45 seconds
+	    increaseChaos()
 	  }
-	}, 30000)
+	}, 10000)
     
     // Listen for custom events
     const handleSuperMode = () => activateUltimatePower()
@@ -511,6 +585,11 @@ export default function SuperCrazyFeatures() {
       document.body.style.animation = ''
       document.body.style.transform = ''
       document.body.classList.remove('animate-screen-shake', 'animate-screen-shake-intense', 'animate-pulse-bg')
+      
+      // Clean up cursor if exists
+      if (mouseMoveListenerRef.current) {
+        document.removeEventListener('mousemove', mouseMoveListenerRef.current)
+      }
       
       // Remove global functions
       delete window.wizardMode

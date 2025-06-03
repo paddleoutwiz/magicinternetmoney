@@ -57,6 +57,9 @@ export default function MatrixRain() {
       ctx.font = `bold ${fontSize}px monospace`
       currentPills.length = 0 // Clear pill positions
       
+      // Batch similar operations
+      ctx.save()
+      
       for (let i = 0; i < drops.length; i++) {
         const isPillColumn = pillColumns.has(i)
         const char = isPillColumn && Math.random() > 0.3 ? '💊' : 
@@ -116,6 +119,7 @@ export default function MatrixRain() {
       ctx.shadowBlur = 0
       ctx.globalAlpha = 1
       ctx.filter = 'none'
+      ctx.restore()
       
       // Update pill positions for click detection
       setPillPositions([...currentPills])

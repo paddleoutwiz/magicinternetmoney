@@ -30,16 +30,12 @@ const wizards = [
     label: 'Wizard #1077', 
     url: 'https://ord-mirror.magiceden.dev/content/fd7e30758039683da5008040f1d31d627d54f1f75d14853b3bf23e105dee355bi0'
   },
-  { 
-    id: 1296, 
-    label: 'Wizard #1296', 
-    url: 'https://ord-mirror.magiceden.dev/content/1bd4397ff72e2bb02ee936af31750c1669f26efb104e5f4b14931235f1d6a3a0i0'
-  },
 ]
 
 export default function WizardGallery() {
   const [clickedWizards, setClickedWizards] = useState<number[]>([])
   const [loadedWizards, setLoadedWizards] = useState<number[]>([])
+  const [marketplaceHovered, setMarketplaceHovered] = useState(false)
 
   const handleWizardClick = (id: number) => {
     setClickedWizards(prev => [...prev, id])
@@ -53,7 +49,7 @@ export default function WizardGallery() {
   }
 
   return (
-    <section id="wizards" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 p-12 bg-gray-200 border-t-[5px] border-b-[5px] border-wizard-black">
+    <section id="wizards" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 md:gap-8 p-6 sm:p-8 md:p-12 bg-gray-200 border-t-[5px] border-b-[5px] border-wizard-black">
       {wizards.map(wizard => (
         <div
           key={wizard.id}
@@ -107,6 +103,47 @@ export default function WizardGallery() {
           )}
         </div>
       ))}
+      
+      {/* Magic Eden Marketplace Link */}
+      <a
+        href="https://magiceden.us/ordinals/marketplace/bitcoin-wizards"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="relative cursor-pointer transition-all hover:-translate-y-2 hover:rotate-[5deg] group"
+        onMouseEnter={() => setMarketplaceHovered(true)}
+        onMouseLeave={() => setMarketplaceHovered(false)}
+      >
+        <div className={`relative w-full aspect-square overflow-hidden border-3 border-wizard-black rounded-[20px] bg-bitcoin-orange flex flex-col items-center justify-center p-4 ${
+          marketplaceHovered ? 'bg-magic-yellow' : ''
+        } transition-colors`}>
+          <div className="text-4xl sm:text-5xl mb-2 group-hover:animate-bounce">🛒</div>
+          <div className="text-wizard-black font-derp text-lg sm:text-xl md:text-2xl text-center leading-tight">
+            Buy/Sell<br/>Wizards
+          </div>
+          <div className="text-3xl sm:text-4xl mt-2 group-hover:animate-spin">✨</div>
+        </div>
+        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-wizard-blue text-white px-4 py-1 border-2 border-wizard-black rounded-[10px] font-derp text-sm whitespace-nowrap">
+          Magic Eden
+        </div>
+        {marketplaceHovered && (
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute text-2xl animate-float"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animationDelay: `${i * 0.2}s`,
+                  animationDuration: '2s'
+                }}
+              >
+                💰
+              </div>
+            ))}
+          </div>
+        )}
+      </a>
     </section>
   )
 }

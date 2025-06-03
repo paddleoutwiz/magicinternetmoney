@@ -36,8 +36,8 @@ export default function Navigation() {
     { href: '#community', label: 'Community' },
     { href: '#about', label: 'Story' },
     { href: '#launch', label: 'Fair Launch' },
-    { href: '#wizards', label: 'Wizards' },
     { href: '#why', label: 'Why MIM?' },
+    { href: '#wizards', label: 'Wizards' },
   ]
 
   // Desktop navigation

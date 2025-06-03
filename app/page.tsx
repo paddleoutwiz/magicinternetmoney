@@ -30,8 +30,8 @@ export default function Home() {
         <CommunityLinks />
         <StorySection />
         <FairLaunchSection />
-        <WizardGallery />
         <WhyMimSection />
+        <WizardGallery />
       </main>
       
       <Footer />

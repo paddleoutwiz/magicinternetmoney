@@ -7,9 +7,9 @@ export default function StorySection() {
           <span className="absolute inset-0 bg-wizard-highlight bottom-[5px] -z-10 -skew-x-[5deg]"></span>
         </h2>
         <p className="text-2xl leading-relaxed text-wizard-black">
-          Born from the mystical depths of r/bitcoin in 2013, the Bitcoin Wizard emerged as a symbol of magic internet money. 
-          Created by the legendary <a href="https://x.com/mavensbot">@mavensbot</a>, this MS Paint masterpiece became the beloved mascot of Bitcoin's early adopters—those 
-          who saw the magic before the world understood.
+          Magic Internet Money (MIM) is the first mainstream Bitcoin meme, originally created in 2013 and deployed a decade later on the Bitcoin blockchain by its original artist, Mavensbot.</p>
+        <p className="text-2xl leading-relaxed text-wizard-black">
+          It all began in the r/bitcoin subreddit, where Mavensbot posted his now-iconic MS Paint artwork of the “Magic Internet Money Wizard”. His drawing was later turned into a reddit ad to promote Bitcoin. It then became the most successful Reddit ad of all time and played a key role in Bitcoin’s early rise from $27 to $1,132, while helping grow the r/bitcoin subreddit community from 10,000 to over 100,000 subscribers by the end of 2014.
         </p>
       </div>
       

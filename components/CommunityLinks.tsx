@@ -23,7 +23,7 @@ const communityLinks = [
   },
   { 
     name: 'Magic Eden', 
-    url: 'https://magiceden.io/ordinals/marketplace/bitcoin-wizards',
+    url: 'https://magiceden.us/runes/MAGIC%E2%80%A2INTERNET%E2%80%A2MONEY',
     emoji: '🎨',
     color: 'bg-[#E42575]'
   },
@@ -50,6 +50,12 @@ const communityLinks = [
     url: 'https://www.coingecko.com/en/coins/magic-internet-money-runes',
     emoji: '🦎',
     color: 'bg-[#fbe97b]'
+  },
+  { 
+    name: 'CoinMarketCap', 
+    url: 'https://coinmarketcap.com/currencies/magic-internet-money-bitcoin/',
+    emoji: '🪙',
+    color: 'bg-[#3861FB]'
   },
 ]
 

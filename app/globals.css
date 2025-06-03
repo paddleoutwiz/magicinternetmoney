@@ -22,6 +22,7 @@
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
 
 /* ==================== CSS VARIABLES ==================== */
 :root {
@@ -29,6 +30,13 @@
   --color-magic-yellow: #f3ff00;
   --color-magic-orange: #f09f00;
   --color-magic-brown: #9d4602;
+  
+  /* Wizard colors */
+  --color-wizard-black: #040104;
+  --color-wizard-blue: #2f53fe;
+  --color-wizard-cyan: #67d1e3;
+  --color-wizard-highlight: #f3ff00;
+  --color-bitcoin-orange: #f09f00;
   
   /* Glitch colors */
   --color-glitch-magenta: #ff00ff;
@@ -55,14 +63,99 @@
     font-family: 'Derp', 'Permanent Marker', cursive;
   }
   
-  /* Typography hierarchy */
-  h1 { @apply font-derp tracking-wider text-6xl md:text-8xl text-center; }
-  h2 { @apply font-derp tracking-wider text-4xl md:text-6xl text-center; }
-  h3 { @apply font-derp tracking-wider text-3xl md:text-4xl text-center; }
-  h4, h5, h6 { @apply font-derp tracking-wider text-2xl md:text-3xl text-center; }
+  .font-caveat {
+    font-family: 'Caveat', cursive;
+  }
+  
+  /* Typography hierarchy - Mobile responsive */
+  h1 { @apply font-derp tracking-wider text-4xl sm:text-6xl md:text-8xl text-center; }
+  h2 { @apply font-derp tracking-wider text-3xl sm:text-4xl md:text-6xl text-center; }
+  h3 { @apply font-derp tracking-wider text-2xl sm:text-3xl md:text-4xl text-center; }
+  h4, h5, h6 { @apply font-derp tracking-wider text-xl sm:text-2xl md:text-3xl text-center; }
   
   p {
-    @apply font-caveat text-xl md:text-2xl font-bold text-center;
+    @apply font-caveat text-lg sm:text-xl md:text-2xl font-bold text-center;
+  }
+  
+  /* Custom border widths */
+  .border-3 {
+    border-width: 3px;
+  }
+  
+  .border-4 {
+    border-width: 4px;
+  }
+  
+  .border-t-\[5px\] {
+    border-top-width: 5px;
+  }
+  
+  .border-b-\[5px\] {
+    border-bottom-width: 5px;
+  }
+  
+  /* Custom colors */
+  .bg-magic-yellow { background-color: var(--color-magic-yellow); }
+  .bg-wizard-black { background-color: var(--color-wizard-black); }
+  .bg-wizard-blue { background-color: var(--color-wizard-blue); }
+  .bg-wizard-highlight { background-color: var(--color-wizard-highlight); }
+  .bg-bitcoin-orange { background-color: var(--color-bitcoin-orange); }
+  
+  .text-magic-yellow { color: var(--color-magic-yellow); }
+  .text-wizard-black { color: var(--color-wizard-black); }
+  .text-wizard-blue { color: var(--color-wizard-blue); }
+  .text-wizard-cyan { color: var(--color-wizard-cyan); }
+  .text-bitcoin-orange { color: var(--color-bitcoin-orange); }
+  
+  .border-magic-yellow { border-color: var(--color-magic-yellow); }
+  .border-wizard-black { border-color: var(--color-wizard-black); }
+  
+  /* Custom rounded corners */
+  .rounded-\[10px\] { border-radius: 10px; }
+  .rounded-\[15px_5px_15px_5px\] { border-radius: 15px 5px 15px 5px; }
+  .rounded-\[20px\] { border-radius: 20px; }
+  .rounded-\[20px_5px_20px_5px\] { border-radius: 20px 5px 20px 5px; }
+  
+  /* Custom shadows */
+  .shadow-\[5px_5px_0_\#040104\] { box-shadow: 5px 5px 0 #040104; }
+  .shadow-\[8px_8px_0_\#040104\] { box-shadow: 8px 8px 0 #040104; }
+  .shadow-\[0_0_2px_\#040104\] { box-shadow: 0 0 2px #040104; }
+  .shadow-\[0_0_4px_\#040104\] { box-shadow: 0 0 4px #040104; }
+  .drop-shadow-\[0_0_10px_\#f3ff00\] { filter: drop-shadow(0 0 10px #f3ff00); }
+  
+  /* Additional utility classes */
+  .outline-none { outline: none; }
+  .pointer-events-none { pointer-events: none; }
+  .cursor-pointer { cursor: pointer; }
+  .cursor-crosshair { cursor: crosshair; }
+  .overflow-hidden { overflow: hidden; }
+  
+  /* Transform utilities */
+  .-rotate-1 { transform: rotate(-0.25deg); }
+  .-rotate-2 { transform: rotate(-0.5deg); }
+  .-rotate-3 { transform: rotate(-0.75deg); }
+  .rotate-1 { transform: rotate(0.25deg); }
+  .rotate-2 { transform: rotate(0.5deg); }
+  .rotate-3 { transform: rotate(0.75deg); }
+  .-rotate-\[5deg\] { transform: rotate(-5deg); }
+  .rotate-\[5deg\] { transform: rotate(5deg); }
+  
+  /* Translate utilities */
+  .-translate-x-1\/2 { transform: translateX(-50%); }
+  .-translate-y-1\/2 { transform: translateY(-50%); }
+  
+  /* Text shadow for 3D effect */
+  [style*="textShadow"] {
+    text-shadow: var(--tw-shadow);
+  }
+  
+  /* Support for inline animation properties */
+  [style*="animationDelay"] {
+    animation-delay: var(--animation-delay);
+  }
+  
+  [style*="animationDuration"] {
+    animation-duration: var(--animation-duration);
   }
 }
 
@@ -113,6 +206,24 @@
   .matrix-enhanced {
     background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.8) 100%);
   }
+  
+  /* Performance optimization classes */
+  .will-change-transform {
+    will-change: transform;
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  /* Custom component classes */
+  .nav-btn,
+  .join-btn {
+    @apply transition-all;
+  }
+  
+  .giant-cursor {
+    pointer-events: none;
+    mix-blend-mode: multiply;
+  }
 }
 
 /* ==================== UTILITIES ==================== */
@@ -125,6 +236,16 @@
   .z-ui { z-index: 10000; }       /* UI elements */
   .z-pills { z-index: 100000; }   /* Pill effects */
   .z-cursor { z-index: 999999; }  /* Cursor trail */
+  
+  /* Custom z-index values */
+  .z-\[-2\] { z-index: -2; }
+  .z-\[10\] { z-index: 10; }
+  .z-\[20\] { z-index: 20; }
+  .z-\[30\] { z-index: 30; }
+  .z-\[50\] { z-index: 50; }
+  .z-\[60\] { z-index: 60; }
+  .z-\[99998\] { z-index: 99998; }
+  .z-\[99999\] { z-index: 99999; }
   
   /* Animation utilities */
   .animate-pill-float {
@@ -142,9 +263,77 @@
   .animate-pulse-bg {
     animation: rainbow-background 3s linear infinite;
   }
+  
+  .animate-\[vortex-spin_60s_linear_infinite\] {
+    animation: vortex-spin 60s linear infinite;
+  }
+  
+  .animate-bounce {
+    animation: bounce 1s infinite;
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+  
+  /* Dynamic animation classes */
+  .animate-\[float-up_1s_ease-out_forwards\] {
+    animation: float-up 1s ease-out forwards;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .animate-\[floatAround_20s_linear_infinite\] {
+    animation: floatAround 20s linear infinite;
+  }
+  
+  .animate-sparkle {
+    animation: sparkle 1s ease-out forwards;
+  }
+  
+  .animate-explode {
+    animation: explode 1s ease-out forwards;
+  }
+  
+  .animate-rainbow-glow {
+    animation: rainbow-glow 2s ease-in-out infinite;
+  }
+  
+  .animate-power-text {
+    animation: power-text 3s ease-in-out;
+  }
 }
 
 /* ==================== KEYFRAME ANIMATIONS ==================== */
+
+/* === Basic Animations === */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+
+/* === Vortex Animation === */
+@keyframes vortex-spin {
+  from { transform: rotate(0deg) translateZ(0); }
+  to { transform: rotate(360deg) translateZ(0); }
+}
 
 /* === Movement Animations === */
 @keyframes float {
@@ -169,6 +358,17 @@
   }
   100% {
     transform: translateX(-50%) translateY(-50px);
+    opacity: 0;
+  }
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50px);
     opacity: 0;
   }
 }
@@ -223,10 +423,10 @@
 
 @keyframes pill-fall {
   0% {
-    transform: translateY(-100px) rotate(0deg);
+    transform: translateY(-100px) rotate(0deg) translateZ(0);
   }
   100% {
-    transform: translateY(calc(100vh + 100px)) rotate(720deg);
+    transform: translateY(calc(100vh + 100px)) rotate(720deg) translateZ(0);
   }
 }
 
@@ -418,4 +618,39 @@
     left: 100vw;
     opacity: 0;
   }
+}
+
+@keyframes power-text {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.2) rotate(5deg); }
+}
+
+/* === Performance Mode === */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === Mobile Optimizations === */
+@media (max-width: 640px) {
+  /* Reduce animation complexity on mobile */
+  .animate-screen-shake-intense {
+    animation: screen-shake 0.5s ease-in-out;
+  }
+  
+  /* Simpler pill animations on mobile */
+  @keyframes pill-fall {
+    to { transform: translateY(calc(100vh + 100px)) translateZ(0); }
+  }
+}
+
+/* === GPU Optimization for common animations === */
+.animate-float,
+.animate-spin,
+.animate-pulse {
+  transform: translateZ(0);
+  will-change: transform;
 }
