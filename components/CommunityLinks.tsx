@@ -57,6 +57,12 @@ const communityLinks = [
     emoji: '🪙',
     color: 'bg-[#3861FB]'
   },
+  { 
+    name: 'MagicSwap', 
+    url: 'https://www.magicswap.app/',
+    emoji: '🤝',
+    color: 'bg-[#0088cc]'
+  },
 ]
 
 export default function CommunityLinks() {
