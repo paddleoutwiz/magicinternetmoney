@@ -63,6 +63,12 @@ const communityLinks = [
     emoji: '🤝',
     color: 'bg-[#0088cc]'
   },
+  { 
+    name: 'Art', 
+    url: 'https://art.bitcoinwizard.com/',
+    emoji: '🖼️',
+    color: 'bg-[#E42575]'
+  },
 ]
 
 export default function CommunityLinks() {

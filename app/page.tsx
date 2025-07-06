@@ -30,9 +30,9 @@ export default function Home() {
         <HeroSection />
         <CommunityLinks />
         <StorySection />
+        <MissionSection />
         <FairLaunchSection />
         <WhyMimSection />
-        <MissionSection />
         <WizardGallery />
       </main>
       
