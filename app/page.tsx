@@ -4,6 +4,7 @@ import StorySection from '@/components/StorySection'
 import FairLaunchSection from '@/components/FairLaunchSection'
 import WizardGallery from '@/components/WizardGallery'
 import WhyMimSection from '@/components/WhyMimSection'
+import MissionSection from '@/components/MissionSection'
 import Footer from '@/components/Footer'
 import Navigation from '@/components/Navigation'
 import MimTicker from '@/components/MimTicker'
@@ -31,6 +32,7 @@ export default function Home() {
         <StorySection />
         <FairLaunchSection />
         <WhyMimSection />
+        <MissionSection />
         <WizardGallery />
       </main>
       
