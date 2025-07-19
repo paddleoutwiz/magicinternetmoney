@@ -6,67 +6,67 @@ const communityLinks = [
   { 
     name: 'Discord', 
     url: 'https://discord.gg/bitcoinwizard',
-    emoji: '💬',
+    image: '/assets/icons/discord.png',
     color: 'bg-[#5865F2]'
   },
   { 
     name: 'Twitter/X', 
     url: 'https://x.com/mimcoinbtc',
-    emoji: '🐦',
+    image: '/assets/icons/x.png',
     color: 'bg-[#1DA1F2]'
   },
   { 
     name: 'Telegram', 
     url: 'https://t.me/bitcoinwizardry',
-    emoji: '✈️',
-    color: 'bg-[#0088cc]'
+    image: '/assets/icons/telegram.png',
+    color: 'bg-[#3aafea]'
   },
   { 
     name: 'Magic Eden', 
     url: 'https://magiceden.us/runes/MAGIC%E2%80%A2INTERNET%E2%80%A2MONEY',
-    emoji: '🎨',
+    image: '/assets/icons/magiceden.png',
     color: 'bg-[#E42575]'
   },
   { 
     name: 'Meme Maker', 
     url: 'https://www.magicinternet.meme/',
-    emoji: '🦄',
+    image: '/assets/icons/mememaker.png',
     color: 'bg-[#FF6B6B]'
   },
   { 
     name: 'DotSwap', 
     url: 'https://www.dotswap.app/swap#R_%E2%80%A2BTC_%E2%80%A2MAGIC%E2%80%A2INTERNET%E2%80%A2MONEY',
-    emoji: '💻',
+    image: '/assets/icons/dotswap.png',
     color: 'bg-[#333333]'
   },
   { 
     name: 'Slingshot', 
     url: 'https://slingshot.app/token/solana/M1M6sdffCs3ozzhpRveweRCWdZhxth4mvVujPtYEC3h?code=MagicInternetMoney&c=962&t=l',
-    emoji: '🏛️',
+    image: '/assets/icons/slingshot.png',
     color: 'bg-[#75fc6e]'
   },
   { 
     name: 'Coingecko', 
     url: 'https://www.coingecko.com/en/coins/magic-internet-money-runes',
-    emoji: '🦎',
+    image: '/assets/icons/coingecko.png',
     color: 'bg-[#fbe97b]'
   },
   { 
     name: 'CoinMarketCap', 
     url: 'https://coinmarketcap.com/currencies/magic-internet-money-bitcoin/',
-    emoji: '🪙',
+    image: '/assets/icons/coinmarketcap.png',
     color: 'bg-[#3861FB]'
   },
   { 
     name: 'MagicSwap', 
     url: 'https://www.magicswap.app/',
-    emoji: '🤝',
+    image: '/assets/icons/magicswap.png',
     color: 'bg-[#0088cc]'
   },
   { 
     name: 'Art', 
     url: 'https://art.bitcoinwizard.com/',
-    emoji: '🖼️',
+    image: '/assets/icons/art.png',
     color: 'bg-[#E42575]'
   },
 ]
@@ -125,10 +125,21 @@ export default function CommunityLinks() {
                 hover:brightness-110
               `}
             >
-              <div className="flex flex-col items-center gap-2">
-                <span className={`text-4xl ${hoveredLink === link.name ? 'animate-bounce' : ''}`}>
-                  {link.emoji}
-                </span>
+              <div className="flex flex-col items-center gap-3">
+                <div className={`w-20 h-20 flex items-center justify-center ${hoveredLink === link.name ? 'animate-bounce' : ''}`}>
+                  <img 
+                    src={link.image} 
+                    alt={`${link.name} icon`}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      // Fallback if image fails to load
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                  {/* Fallback emoji hidden by default */}
+                  <span className="hidden text-4xl">🔗</span>
+                </div>
                 <span className="text-lg">{link.name}</span>
               </div>
               

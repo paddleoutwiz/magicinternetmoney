@@ -2,6 +2,7 @@ import HeroSection from '@/components/HeroSection'
 import CommunityLinks from '@/components/CommunityLinks'
 import StorySection from '@/components/StorySection'
 import FairLaunchSection from '@/components/FairLaunchSection'
+import TokenomicsSection from '@/components/TokenomicsSection'
 import WizardGallery from '@/components/WizardGallery'
 import WhyMimSection from '@/components/WhyMimSection'
 import MissionSection from '@/components/MissionSection'
@@ -32,6 +33,7 @@ export default function Home() {
         <StorySection />
         <MissionSection />
         <FairLaunchSection />
+        <TokenomicsSection />
         <WhyMimSection />
         <WizardGallery />
       </main>
