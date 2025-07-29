@@ -69,6 +69,12 @@ const communityLinks = [
     image: '/assets/icons/art.png',
     color: 'bg-[#E42575]'
   },
+  { 
+    name: 'Runemine Bridge', 
+    url: 'https://app.runemine.com/bridge',
+    image: '/assets/icons/art.png',
+    color: 'bg-[#F05623]'
+  },
 ]
 
 export default function CommunityLinks() {
