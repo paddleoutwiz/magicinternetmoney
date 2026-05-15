@@ -5,7 +5,7 @@ import { useState } from 'react'
 const communityLinks = [
   { 
     name: 'Discord', 
-    url: 'https://discord.gg/bitcoinwizard',
+    url: 'https://discord.com/invite/dKCJwfVaM9',
     image: '/assets/icons/discord.png',
     color: 'bg-[#5865F2]'
   },
