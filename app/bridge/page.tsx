@@ -1363,7 +1363,7 @@ function HowItWorksSection() {
     {
       n: '2',
       title: 'Measure the gap',
-      body: "Break-even spread = 2% DotSwap (0.4% platform + 1.6% LP) + 0.26% Kraken taker + slippage budget + the BTC L1 fee. If the gross spread is wide enough to clear break-even (give or take a small convergence subsidy), the wizard prepares both legs. The goal isn't operator profit — it's tightening the spread.",
+      body: "Compute the round-trip break-even (DotSwap pool fee + Kraken taker + slippage + L1 fee). If the live gross spread clears it, the wizard prepares both legs. The goal isn't operator profit — it's tightening the spread.",
       color: 'wizard-blue',
     },
     {
@@ -1381,7 +1381,7 @@ function HowItWorksSection() {
     {
       n: '5',
       title: 'Swap, then burn 🔥',
-      body: "BTC the wizard captures from spreads accumulates in a burn reserve. When the reserve crosses the threshold, the wizard buys fresh $MIM on DotSwap with that BTC — then immediately burns that $MIM in a protocol-native destruction (edict targets the runestone's OP_RETURN; every runes-aware indexer recognizes it as a burn). Captured BTC → burned $MIM. Conservation holds.",
+      body: "BTC captured from spreads accumulates in a reserve. When the reserve crosses the threshold, the wizard buys fresh $MIM on DotSwap with that BTC and immediately burns it via the Runes protocol's native destruction (edict targets the runestone's OP_RETURN — every runes-aware indexer recognizes it as a burn). Captured BTC → burned $MIM. Conservation holds.",
       color: 'glitch-magenta',
     },
   ];
@@ -1397,23 +1397,40 @@ function HowItWorksSection() {
           promotion.
         </p>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
+        {/*
+          Layout:
+            - mobile:  1-up stack
+            - md:      2-up grid
+            - lg+:     3-up grid; step 5 (the burn step, our headline)
+                       spans 2 columns to give it prominence + match the
+                       other 2 steps on the second row width-wise.
+
+          Card layout was redesigned so the number + title sit on the
+          same row at the top (saving vertical space + reading better
+          when widths vary), with the body text below.
+        */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {steps.map((s, i) => (
             <div
               key={s.n}
               className={`bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-5 ${
-                i % 2 === 0 ? '-rotate-1' : 'rotate-1'
-              } hover:rotate-0 transition-all`}
+                i % 2 === 0 ? '-rotate-[0.5deg]' : 'rotate-[0.5deg]'
+              } hover:rotate-0 transition-all ${
+                // Step 5 is the burn — give it the wider span on lg+.
+                s.n === '5' ? 'lg:col-span-2' : ''
+              }`}
             >
-              <div
-                className={`inline-block w-10 h-10 bg-${s.color} border-2 border-wizard-black rounded-full text-center font-derp text-2xl leading-9 mb-3 shadow-[2px_2px_0_#040104]`}
-              >
-                {s.n}
+              <div className="flex items-center gap-3 mb-3">
+                <div
+                  className={`flex-none w-10 h-10 bg-${s.color} border-2 border-wizard-black rounded-full text-center font-derp text-2xl leading-9 shadow-[2px_2px_0_#040104]`}
+                >
+                  {s.n}
+                </div>
+                <h3 className="font-derp text-xl md:text-2xl text-wizard-black">
+                  {s.title}
+                </h3>
               </div>
-              <h3 className="font-derp text-xl text-wizard-black mb-2">
-                {s.title}
-              </h3>
-              <p className="font-caveat text-base text-wizard-text leading-snug">
+              <p className="font-caveat text-base md:text-lg text-wizard-text leading-snug">
                 {s.body}
               </p>
             </div>
