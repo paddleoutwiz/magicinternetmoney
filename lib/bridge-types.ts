@@ -133,6 +133,8 @@ export interface Fire {
   token: string;
   direction: string;
   sizeUsd: number;
+  /** Token units moved in this cycle (e.g., 1,189,296 MIM). */
+  tokenVolume?: number;
   status: string;
   createdAt: string;
   krakenOrderId?: string;

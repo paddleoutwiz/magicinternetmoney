@@ -477,13 +477,18 @@ function EdgeCard({ edge, threshold }: { edge: TokenEdge; threshold: number }) {
             <tr className="text-wizard-text border-b border-wizard-beard">
               <th className="text-left py-1 font-caveat text-base">size</th>
               <th className="text-left py-1 font-caveat text-base">direction</th>
-              <th className="text-right py-1 font-caveat text-base">net P&L</th>
+              <th
+                className="text-right py-1 font-caveat text-base"
+                title="Fees + slippage as a fraction of trade size. Positive means the cycle clears break-even."
+              >
+                edge vs fees
+              </th>
             </tr>
           </thead>
           <tbody>
             {edge.sized.map((s) => {
               const isPicked = s.direction === best.direction;
-              const profitable = s.netUsd > 0;
+              const clearsBreakeven = s.netPct >= 0;
               return (
                 <tr
                   key={s.sizeUsd + s.direction}
@@ -509,14 +514,14 @@ function EdgeCard({ edge, threshold }: { edge: TokenEdge; threshold: number }) {
                   <td className="py-1 text-xs">{directionLabel(s.direction)}</td>
                   <td
                     className={`py-1 text-right font-bold ${
-                      profitable
+                      clearsBreakeven
                         ? 'text-wizard-highlight'
                         : isPicked
                           ? 'text-wizard-black'
                           : 'text-wizard-text'
                     }`}
                   >
-                    {fmtUsd(s.netUsd)} ({fmtPct(s.netPct)})
+                    {fmtPct(s.netPct)}
                   </td>
                 </tr>
               );
@@ -524,9 +529,9 @@ function EdgeCard({ edge, threshold }: { edge: TokenEdge; threshold: number }) {
           </tbody>
         </table>
         <p className="mt-2 font-caveat text-xs text-wizard-beard">
-          The wizard picks the highlighted direction. The other row is shown
-          for transparency — it's what would happen if you traded the wrong
-          way around (buying the rich venue, selling the cheap one).
+          "Edge vs fees" is the gross cross-venue spread net of all costs —
+          DotSwap fee, Kraken taker, L1 fee, slippage. Positive = the cycle
+          clears break-even.
         </p>
       </div>
     </div>
@@ -886,7 +891,7 @@ function FiresSection({ state }: { state: DashboardState }) {
           <div>token</div>
           <div>direction</div>
           <div className="text-right">size</div>
-          <div className="text-right">P&L</div>
+          <div className="text-right">moved</div>
           <div className="text-right">status</div>
           <div className="text-right">when</div>
         </div>
@@ -954,15 +959,14 @@ function FireRow({
   expanded: boolean;
   onToggle: () => void;
 }) {
-  const realized = fire.realizedUsd;
-  const realizedColor =
-    realized === undefined
-      ? 'text-wizard-beard'
-      : realized > 0
-        ? 'text-wizard-highlight'
-        : realized < 0
-          ? 'text-glitch-magenta'
-          : 'text-wizard-text';
+  // "Moved" cell: token volume bridged in this cycle. This is the honest
+  // measure of what the cycle did for the ecosystem — USD P&L is mostly a
+  // function of BTC drift during the ~24h settlement window and doesn't
+  // measure bridge performance.
+  const movedLabel =
+    fire.tokenVolume !== undefined && fire.tokenVolume > 0
+      ? `${fmtNumber(fire.tokenVolume, { compact: fire.tokenVolume > 100_000 })} ${fire.token}`
+      : '—';
   const statusColor =
     fire.status === 'complete'
       ? 'bg-wizard-highlight'
@@ -989,14 +993,15 @@ function FireRow({
           {directionLabel(fire.direction)}
         </span>
 
-        {/* Desktop: size + P&L + status + when as separate columns */}
+        {/* Desktop: size + moved + status + when as separate columns */}
         <span className="hidden md:inline font-mono text-sm text-wizard-text text-right">
           ${fire.sizeUsd}
         </span>
         <span
-          className={`hidden md:inline font-derp text-base text-right ${realizedColor}`}
+          className="hidden md:inline font-mono text-sm text-wizard-black text-right whitespace-nowrap"
+          title="Token volume bridged in this cycle"
         >
-          {realized === undefined ? '—' : fmtUsd(realized)}
+          {movedLabel}
         </span>
         <span
           className={`hidden md:inline-flex justify-self-end px-2 py-0.5 border-2 border-wizard-black rounded-[6px_2px_6px_2px] font-derp text-xs ${statusColor}`}
@@ -1007,15 +1012,15 @@ function FireRow({
           {timeAgo(fire.createdAt)}
         </span>
 
-        {/* Mobile: stack status/P&L/time into the right column */}
+        {/* Mobile: stack status/moved/time into the right column */}
         <span className="md:hidden flex flex-col items-end gap-0.5 text-right">
           <span
             className={`px-2 py-0.5 border-2 border-wizard-black rounded-[6px_2px_6px_2px] font-derp text-xs ${statusColor}`}
           >
             {compactStatus(fire.status)}
           </span>
-          <span className={`font-derp text-sm ${realizedColor}`}>
-            {realized === undefined ? '—' : fmtUsd(realized)}
+          <span className="font-mono text-xs text-wizard-text">
+            {movedLabel}
           </span>
           <span className="font-caveat text-xs text-wizard-text">
             {timeAgo(fire.createdAt)}
@@ -1127,7 +1132,7 @@ function HowItWorksSection() {
     {
       n: '4',
       title: 'Settle on Bitcoin',
-      body: "The Kraken leg locks P&L in under a second. The L1 leg confirms in the next block or two. The wizard's L1 watcher updates the leg state when the transaction lands and adjusts the inventory snapshot.",
+      body: "The Kraken leg fills in under a second. The L1 leg confirms in the next block or two. The wizard's L1 watcher advances the leg state when the transaction lands and updates the inventory snapshot.",
       color: 'magic-yellow',
     },
   ];
