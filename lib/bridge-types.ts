@@ -34,6 +34,8 @@ export interface DashboardState {
     firesComplete: number;
     firesFailed: number;
     realizedPnlUsd: number;
+    /** USD notional flowed through the bridge (sum of every non-failed leg's requestedUsd). */
+    bridgedVolumeUsd: number;
     uptimeSec: number;
   };
   config: {
@@ -44,6 +46,39 @@ export interface DashboardState {
     autoSign: boolean;
     live: boolean;
   };
+  /** Asset deltas since the bridge first started writing state. */
+  inventoryDeltas?: {
+    recordedAt: string;
+    totalUsdDelta: number;
+    kraken: AssetDelta[];
+    wallet: AssetDelta[];
+  };
+  /** Rolling spread history + convergence summary. */
+  spreadHistory?: {
+    buckets: SpreadBucket[];
+    summary: {
+      /** Avg gross spread (bps) over the last ~1h, per token. */
+      recentBps: Record<string, number>;
+      /** Avg gross spread (bps) over the full retained window (~24h), per token. */
+      baselineBps: Record<string, number>;
+      /** recentBps - baselineBps. Negative means the spread has tightened. */
+      deltaBps: Record<string, number>;
+    };
+  };
+}
+
+export interface AssetDelta {
+  asset: string;
+  amountDelta: number;
+  usdDelta: number;
+  current: number;
+  baseline: number;
+}
+
+export interface SpreadBucket {
+  at: string;
+  perToken: Record<string, number>;
+  n: number;
 }
 
 export interface TokenEdge {
@@ -173,7 +208,28 @@ export const MOCK_STATE: DashboardState = {
     firesComplete: 1,
     firesFailed: 0,
     realizedPnlUsd: -1.4,
+    bridgedVolumeUsd: 50,
     uptimeSec: 17_900,
+  },
+  inventoryDeltas: {
+    recordedAt: '2026-05-25T18:00:00.000Z',
+    totalUsdDelta: -1.4,
+    kraken: [
+      { asset: 'MIM', amountDelta: 195_000, usdDelta: 50.4, current: 4_328_958, baseline: 4_133_958 },
+      { asset: 'USD', amountDelta: -51.4, usdDelta: -51.4, current: 1160.75, baseline: 1212.15 },
+    ],
+    wallet: [
+      { asset: 'MIM', amountDelta: -195_000, usdDelta: -51.0, current: 7_805_901, baseline: 8_000_901 },
+      { asset: 'BTC', amountDelta: 0.0006, usdDelta: 46.4, current: 0.0207, baseline: 0.0201 },
+    ],
+  },
+  spreadHistory: {
+    buckets: [],
+    summary: {
+      recentBps: { MIM: 215, DOG: -88 },
+      baselineBps: { MIM: 380, DOG: 120 },
+      deltaBps: { MIM: -165, DOG: -208 },
+    },
   },
   config: {
     edgeThresholdPct: 0.5,

@@ -16,8 +16,32 @@ import { useEffect, useState } from 'react';
 // ---- Hero ------------------------------------------------------------------
 
 function BridgeHero({ state }: { state: DashboardState }) {
-  const mim = state.edges.find((e) => e.token === 'MIM');
   const live = state.config.live && state.config.autoSign;
+  // Convergence headline: average across tokens of how much the recent (~1h)
+  // spread is tighter than the longer-window (~24h) baseline. Negative values
+  // are good — they mean the spread shrank.
+  const summary = state.spreadHistory?.summary;
+  const deltaBps = summary ? Object.values(summary.deltaBps) : [];
+  const avgDeltaBps =
+    deltaBps.length > 0
+      ? deltaBps.reduce((s, x) => s + x, 0) / deltaBps.length
+      : null;
+  const convergenceLabel =
+    avgDeltaBps === null
+      ? 'gathering data…'
+      : avgDeltaBps <= -1
+        ? `${Math.abs(avgDeltaBps).toFixed(0)} bps tighter`
+        : avgDeltaBps >= 1
+          ? `${avgDeltaBps.toFixed(0)} bps wider`
+          : 'holding steady';
+  const convergenceColor: 'positive' | 'negative' | undefined =
+    avgDeltaBps === null
+      ? undefined
+      : avgDeltaBps <= -1
+        ? 'positive'
+        : avgDeltaBps >= 1
+          ? 'negative'
+          : undefined;
   return (
     <section className="relative min-h-[60vh] flex items-center justify-center px-4 py-16">
       <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/80 to-white/100 z-0" />
@@ -52,34 +76,34 @@ function BridgeHero({ state }: { state: DashboardState }) {
 
         {/* Subtitle */}
         <p className="mt-8 text-xl md:text-2xl font-caveat text-wizard-text max-w-3xl mx-auto leading-snug">
-          An <strong>autonomous wizard</strong> watching <strong>$MIM</strong>{' '}
-          and <strong>$DOG</strong> prices on{' '}
+          An <strong>autonomous wizard</strong> bridging <strong>$MIM</strong>{' '}
+          and <strong>$DOG</strong> liquidity between{' '}
           <span className="text-bitcoin-orange font-bold">Kraken</span> and{' '}
-          <span className="text-wizard-blue font-bold">DotSwap</span> at the same
-          time. When the spread opens up, it{' '}
-          <em className="text-wizard-highlight">casts a spell</em>: buys cheap on
-          one side, sells dear on the other.{' '}
+          <span className="text-wizard-blue font-bold">DotSwap</span>. When the
+          two venues disagree on price, the wizard{' '}
+          <em className="text-wizard-highlight">casts a spell</em> across them
+          — tightening the spread for everyone in the ecosystem.{' '}
           <strong>On real Bitcoin. On real money.</strong>
         </p>
 
-        {/* Headline numbers */}
+        {/* Headline numbers — these measure ecosystem service, not operator P&L. */}
         <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
           <Stat label="Treasury" value={fmtUsd(state.inventory.totalUsd)} rotate="-rotate-2" />
           <Stat
-            label="Spells Cast"
+            label="Cycles Closed"
             value={`${state.totals.firesComplete}`}
             rotate="rotate-1"
           />
           <Stat
-            label="Realized P&L"
-            value={fmtUsd(state.totals.realizedPnlUsd)}
+            label="Bridged Volume"
+            value={fmtUsd(state.totals.bridgedVolumeUsd ?? 0)}
             rotate="-rotate-1"
-            color={state.totals.realizedPnlUsd >= 0 ? 'positive' : 'negative'}
           />
           <Stat
-            label={mim ? `${mim.token} spread` : 'MIM spread'}
-            value={mim ? fmtPct(mim.grossSpreadPct) : '—'}
+            label="Spread (1h vs 24h)"
+            value={convergenceLabel}
             rotate="rotate-2"
+            color={convergenceColor}
           />
         </div>
 
@@ -166,16 +190,179 @@ function LiveEdgeSection({ state }: { state: DashboardState }) {
             <strong>L1 fee</strong>: {state.market.btcFeeRate?.fastestFee ?? '?'} sat/vB
           </span>
           <span className="text-wizard-beard">·</span>
-          <span>
-            <strong>Threshold</strong>: {fmtPct(state.config.edgeThresholdPct)}
+          <span title="How far past break-even the wizard requires before firing. Negative means it's willing to subsidize spread convergence.">
+            <strong>Convergence floor</strong>:{' '}
+            {fmtPct(state.config.edgeThresholdPct)}
           </span>
           <span className="text-wizard-beard">·</span>
           <span>
             <strong>Max trade</strong>: ${state.config.maxTradeUsd}
           </span>
         </div>
+
+        {/* Spread convergence panel — the ecosystem-health view */}
+        {state.spreadHistory && (
+          <SpreadConvergencePanel
+            summary={state.spreadHistory.summary}
+            buckets={state.spreadHistory.buckets}
+          />
+        )}
       </div>
     </section>
+  );
+}
+
+// ---- Spread convergence panel ----------------------------------------------
+
+function SpreadConvergencePanel({
+  summary,
+  buckets,
+}: {
+  summary: DashboardState['spreadHistory'] extends infer T
+    ? T extends { summary: infer S }
+      ? S
+      : never
+    : never;
+  buckets: DashboardState['spreadHistory'] extends infer T
+    ? T extends { buckets: infer B }
+      ? B
+      : never
+    : never;
+}) {
+  const tokens = Object.keys(summary.recentBps);
+  return (
+    <div className="mt-6 bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-5">
+      <div className="font-derp text-xl text-wizard-black mb-1 -rotate-[0.5deg]">
+        Spread Convergence
+      </div>
+      <p className="font-caveat text-base text-wizard-text mb-4">
+        The bridge's job is to make these two venues agree on price. Smaller
+        numbers mean tighter spreads — better for everyone trading these
+        runes.
+      </p>
+      <div className="grid sm:grid-cols-2 gap-4">
+        {tokens.map((tok) => {
+          const recent = summary.recentBps[tok] ?? 0;
+          const baseline = summary.baselineBps[tok] ?? 0;
+          const delta = summary.deltaBps[tok] ?? 0;
+          const series = buckets
+            .map((b) => b.perToken[tok])
+            .filter((v): v is number => typeof v === 'number');
+          return (
+            <div
+              key={tok}
+              className="border-2 border-wizard-black rounded-[10px_3px_10px_3px] p-4 bg-[#fbfbf5]"
+            >
+              <div className="flex items-baseline justify-between mb-2">
+                <span className="font-derp text-2xl text-wizard-black">
+                  ${tok}
+                </span>
+                <span
+                  className={`font-derp text-base ${
+                    delta <= -1
+                      ? 'text-wizard-highlight'
+                      : delta >= 1
+                        ? 'text-glitch-magenta'
+                        : 'text-wizard-text'
+                  }`}
+                >
+                  {delta <= -1
+                    ? `↓ ${Math.abs(delta).toFixed(0)} bps`
+                    : delta >= 1
+                      ? `↑ ${delta.toFixed(0)} bps`
+                      : 'steady'}
+                </span>
+              </div>
+              <Sparkline values={series} />
+              <div className="mt-3 grid grid-cols-2 gap-2 text-sm font-caveat text-wizard-text">
+                <div>
+                  <div className="text-wizard-beard">last ~1h</div>
+                  <div className="font-mono text-wizard-black text-base">
+                    {formatBps(recent)}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-wizard-beard">last ~24h</div>
+                  <div className="font-mono text-wizard-black text-base">
+                    {formatBps(baseline)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function formatBps(bps: number): string {
+  const abs = Math.abs(bps);
+  if (abs < 1) return `${bps.toFixed(2)} bps`;
+  return `${Math.round(bps)} bps`;
+}
+
+/**
+ * Tiny inline sparkline. Renders an SVG polyline of the values; auto-scales
+ * vertically. Returns null if there aren't enough points to draw something
+ * meaningful (< 2).
+ */
+function Sparkline({
+  values,
+  width = 240,
+  height = 36,
+}: {
+  values: number[];
+  width?: number;
+  height?: number;
+}) {
+  if (values.length < 2) {
+    return (
+      <div className="text-xs font-caveat text-wizard-beard italic h-9 flex items-center">
+        building history…
+      </div>
+    );
+  }
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const stepX = width / (values.length - 1);
+  const pts = values
+    .map((v, i) => {
+      const x = (i * stepX).toFixed(1);
+      const y = (height - ((v - min) / range) * height).toFixed(1);
+      return `${x},${y}`;
+    })
+    .join(' ');
+  // Zero line for visual reference (only if 0 is inside the range).
+  const zeroLineY =
+    min <= 0 && max >= 0 ? (height - ((0 - min) / range) * height).toFixed(1) : null;
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      className="block w-full"
+      preserveAspectRatio="none"
+    >
+      {zeroLineY !== null && (
+        <line
+          x1="0"
+          y1={zeroLineY}
+          x2={width}
+          y2={zeroLineY}
+          stroke="#cdc7b5"
+          strokeWidth="1"
+          strokeDasharray="3 3"
+        />
+      )}
+      <polyline
+        fill="none"
+        stroke="#040104"
+        strokeWidth="1.5"
+        points={pts}
+      />
+    </svg>
   );
 }
 
@@ -295,6 +482,8 @@ function VenueBox({
 // ---- Treasury --------------------------------------------------------------
 
 function TreasurySection({ state }: { state: DashboardState }) {
+  const krakenDeltas = state.inventoryDeltas?.kraken ?? [];
+  const walletDeltas = state.inventoryDeltas?.wallet ?? [];
   return (
     <section className="relative px-4 py-16 bg-white/90">
       <div className="max-w-6xl mx-auto">
@@ -302,7 +491,8 @@ function TreasurySection({ state }: { state: DashboardState }) {
           The Wizard's Vault
         </h2>
         <p className="text-center font-caveat text-xl text-wizard-text mb-12">
-          Real capital deployed across both venues. Read it on chain.
+          Real capital deployed across both venues. Read it on chain. The
+          interesting bit isn't the size — it's how much has moved.
         </p>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -312,6 +502,7 @@ function TreasurySection({ state }: { state: DashboardState }) {
             color="bitcoin-orange"
             rotate="-rotate-1"
             balances={state.inventory.kraken}
+            deltas={krakenDeltas}
           />
           <VaultCard
             title="In the Wallet"
@@ -319,6 +510,7 @@ function TreasurySection({ state }: { state: DashboardState }) {
             color="wizard-blue"
             rotate="rotate-1"
             balances={state.inventory.wallet}
+            deltas={walletDeltas}
             href={`https://mempool.space/address/${state.agent.address}`}
           />
         </div>
@@ -329,6 +521,12 @@ function TreasurySection({ state }: { state: DashboardState }) {
             {fmtUsd(state.inventory.totalUsd)}
           </span>
         </div>
+        {state.inventoryDeltas && (
+          <p className="mt-4 text-center font-caveat text-base text-wizard-beard">
+            tracking deltas since{' '}
+            {new Date(state.inventoryDeltas.recordedAt).toLocaleString()}
+          </p>
+        )}
       </div>
     </section>
   );
@@ -340,6 +538,7 @@ function VaultCard({
   color,
   rotate,
   balances,
+  deltas,
   href,
 }: {
   title: string;
@@ -347,10 +546,14 @@ function VaultCard({
   color: string;
   rotate: string;
   balances: { asset: string; amount: number; usdValue: number }[];
+  deltas?: { asset: string; amountDelta: number; usdDelta: number }[];
   href?: string;
 }) {
   const sorted = [...balances].sort((a, b) => b.usdValue - a.usdValue);
   const total = sorted.reduce((s, b) => s + b.usdValue, 0);
+  const deltaByAsset = new Map(
+    (deltas ?? []).map((d) => [d.asset, d] as const),
+  );
   const wrapped = (
     <div
       className={`bg-white border-3 border-wizard-black rounded-[18px_5px_18px_5px] shadow-[4px_4px_0_#040104] p-6 ${rotate} hover:rotate-0 transition-all`}
@@ -361,20 +564,44 @@ function VaultCard({
       </div>
       <p className="font-caveat text-sm text-wizard-text mb-4">{subtitle}</p>
       <ul className="space-y-2">
-        {sorted.map((b) => (
-          <li
-            key={b.asset}
-            className="flex items-baseline justify-between border-b border-wizard-beard/40 pb-1 last:border-0"
-          >
-            <span className="font-derp text-xl text-wizard-black">{b.asset}</span>
-            <span className="font-caveat text-lg text-wizard-text">
-              {fmtNumber(b.amount, { compact: b.amount > 100_000 })}
-            </span>
-            <span className="font-mono text-sm text-wizard-black w-24 text-right">
-              {fmtUsd(b.usdValue)}
-            </span>
-          </li>
-        ))}
+        {sorted.map((b) => {
+          const d = deltaByAsset.get(b.asset);
+          const compact = b.amount > 100_000;
+          const showDelta = d && Math.abs(d.amountDelta) > 0.0000001;
+          const positive = d ? d.amountDelta > 0 : false;
+          return (
+            <li
+              key={b.asset}
+              className="border-b border-wizard-beard/40 pb-1 last:border-0"
+            >
+              <div className="flex items-baseline justify-between">
+                <span className="font-derp text-xl text-wizard-black">
+                  {b.asset}
+                </span>
+                <span className="font-caveat text-lg text-wizard-text">
+                  {fmtNumber(b.amount, { compact })}
+                </span>
+                <span className="font-mono text-sm text-wizard-black w-24 text-right">
+                  {fmtUsd(b.usdValue)}
+                </span>
+              </div>
+              {showDelta && (
+                <div className="text-right font-caveat text-xs">
+                  <span
+                    className={
+                      positive
+                        ? 'text-wizard-highlight'
+                        : 'text-glitch-magenta'
+                    }
+                  >
+                    {positive ? '+' : ''}
+                    {fmtNumber(d!.amountDelta, { compact })} since launch
+                  </span>
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -413,10 +640,11 @@ function FiresSection({ state }: { state: DashboardState }) {
       <section className="relative px-4 py-16 bg-white/85">
         <div className="max-w-6xl mx-auto text-center">
           <h2 className="text-4xl md:text-6xl font-derp text-wizard-black mb-2 -rotate-1">
-            Spells Cast
+            Cycles Closed
           </h2>
           <p className="font-caveat text-xl text-wizard-text">
-            The wizard hasn't cast any spells yet. Watching, waiting, conjuring.
+            No cycles yet. The wizard is waiting for the cross-venue spread to
+            cross the convergence threshold.
           </p>
         </div>
       </section>
@@ -427,11 +655,13 @@ function FiresSection({ state }: { state: DashboardState }) {
     <section className="relative px-4 py-16 bg-white/85">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-4xl md:text-6xl font-derp text-wizard-black text-center mb-2 -rotate-1">
-          Spells Cast
+          Cycles Closed
         </h2>
         <p className="text-center font-caveat text-xl text-wizard-text mb-8">
-          Every cross-venue arb the wizard has executed. Click a row to see
-          details. Click the transaction id to verify on mempool.space.
+          Every cross-venue cycle the wizard has executed. Each one moved real
+          tokens, paid real fees, and tightened the spread a little. Click a
+          row for details, or click the transaction id to verify on
+          mempool.space.
         </p>
 
         {/* Table header (desktop only) */}
@@ -667,8 +897,8 @@ function HowItWorksSection() {
     },
     {
       n: '2',
-      title: 'Compute the magic',
-      body: 'Edge = spread minus fees: 2% DotSwap (0.4% platform + 1.6% LP) + 0.26% Kraken taker + slippage budget + the BTC L1 transaction fee. If net edge clears the threshold, the wizard prepares both legs of the trade.',
+      title: 'Measure the gap',
+      body: "Break-even spread = 2% DotSwap (0.4% platform + 1.6% LP) + 0.26% Kraken taker + slippage budget + the BTC L1 fee. If the gross spread is wide enough to clear break-even (give or take a small convergence subsidy), the wizard prepares both legs. The goal isn't operator profit — it's tightening the spread.",
       color: 'wizard-blue',
     },
     {
