@@ -841,9 +841,19 @@ function BridgeFooter() {
 
 // ---- Page ------------------------------------------------------------------
 
+/**
+ * Where the runes-bridge agent publishes its live state JSON. The agent
+ * runs on a separate origin so the URL is absolute. CORS is configured on
+ * the agent side to allow magicinternetmoney.party and *.vercel.app.
+ *
+ * Override with NEXT_PUBLIC_BRIDGE_API_URL for local development or to
+ * point at a different deployment.
+ */
+const BRIDGE_API_URL =
+  process.env.NEXT_PUBLIC_BRIDGE_API_URL ||
+  'https://bridge-api.magicinternetmoney.party/api/state';
+
 export default function BridgePage() {
-  // Phase 1 placeholder: we render mock state. Once the agent writes
-  // /api/bridge/state, we'll fetch it on the client and refresh every 10s.
   const [state, setState] = useState<DashboardState>(MOCK_STATE);
   const [usingLive, setUsingLive] = useState(false);
 
@@ -851,7 +861,7 @@ export default function BridgePage() {
     let active = true;
     const fetchState = async () => {
       try {
-        const res = await fetch('/api/bridge/state', { cache: 'no-store' });
+        const res = await fetch(BRIDGE_API_URL, { cache: 'no-store' });
         if (!res.ok) return;
         const json: DashboardState = await res.json();
         if (active) {
@@ -859,7 +869,7 @@ export default function BridgePage() {
           setUsingLive(true);
         }
       } catch {
-        // stick with mock
+        // stick with mock — usually transient network or CORS noise
       }
     };
     void fetchState();
