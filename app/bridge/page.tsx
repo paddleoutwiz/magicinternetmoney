@@ -1,6 +1,6 @@
 'use client';
 
-import { MOCK_STATE, type DashboardState, type SizedEdge, type TokenEdge } from '@/lib/bridge-types';
+import { MOCK_STATE, type DashboardState, type SizedEdge, type TokenEdge, type TokenMarket } from '@/lib/bridge-types';
 import {
   fmtUsd,
   fmtPct,
@@ -557,6 +557,143 @@ function VenueBox({
       </div>
     </div>
   );
+}
+
+// ---- Markets ---------------------------------------------------------------
+
+function MarketsSection({ state }: { state: DashboardState }) {
+  const markets = state.markets ?? [];
+  const summary = state.spreadHistory?.summary;
+  return (
+    <section className="relative px-4 py-16 bg-white/85">
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-4xl md:text-6xl font-derp text-wizard-black text-center mb-2 rotate-1">
+          Markets at a Glance
+        </h2>
+        <p className="text-center font-caveat text-xl text-wizard-text mb-12 max-w-3xl mx-auto">
+          24h trading activity across venues, and how much of it the wizard
+          contributed. The bridge is one participant in a bigger ecosystem —
+          but a measurable one.
+        </p>
+        <div className="grid md:grid-cols-2 gap-6">
+          {markets.map((m) => (
+            <MarketCard
+              key={m.token}
+              market={m}
+              stdBps={summary?.stdBps?.[m.token]}
+              minutesWide={summary?.minutesAboveBreakeven?.[m.token]}
+              breakevenBps={summary?.breakevenBps}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MarketCard({
+  market,
+  stdBps,
+  minutesWide,
+  breakevenBps,
+}: {
+  market: TokenMarket;
+  stdBps?: number;
+  minutesWide?: number;
+  breakevenBps?: number;
+}) {
+  const maxUsd = Math.max(
+    1,
+    ...market.venues.map((v) => v.usdVolume24h),
+  );
+  return (
+    <div className="bg-white border-3 border-wizard-black rounded-[18px_5px_18px_5px] shadow-[4px_4px_0_#040104] p-6 -rotate-[0.3deg] hover:rotate-0 transition-all">
+      <div className="flex items-baseline justify-between mb-1">
+        <h3 className="font-derp text-3xl text-wizard-black">${market.token}</h3>
+        <span className="font-derp text-2xl text-bitcoin-orange">
+          {fmtUsd(market.totalUsd24h)}
+        </span>
+      </div>
+      <p className="font-caveat text-sm text-wizard-text mb-4">
+        24h volume across known venues
+      </p>
+
+      {/* Per-venue bars */}
+      <div className="space-y-3">
+        {market.venues.map((v) => {
+          const widthPct = (v.usdVolume24h / maxUsd) * 100;
+          const colorClass =
+            v.venue === 'Kraken' ? 'bg-bitcoin-orange' : 'bg-wizard-blue';
+          return (
+            <div key={v.venue}>
+              <div className="flex items-baseline justify-between text-sm font-caveat text-wizard-text mb-1">
+                <span>
+                  <strong className="font-derp text-base text-wizard-black">
+                    {v.venue}
+                  </strong>{' '}
+                  · {fmtNumber(v.tokenVolume24h, { compact: true })} tokens
+                </span>
+                <span className="font-mono text-wizard-black">
+                  {fmtUsd(v.usdVolume24h)}
+                </span>
+              </div>
+              <div className="h-3 bg-[#f5f5f0] border-2 border-wizard-black rounded-[6px_2px_6px_2px] overflow-hidden">
+                <div
+                  className={`h-full ${colorClass}`}
+                  style={{ width: `${widthPct}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Bridge contribution */}
+      <div className="mt-5 pt-4 border-t-2 border-wizard-black/20 grid grid-cols-2 gap-2">
+        <div>
+          <div className="font-caveat text-sm text-wizard-text">
+            wizard contributed
+          </div>
+          <div className="font-derp text-2xl text-wizard-highlight">
+            {fmtUsd(market.bridgeUsd24h)}
+          </div>
+          <div className="font-caveat text-xs text-wizard-beard">
+            {market.bridgeSharePct.toFixed(2)}% of 24h volume
+          </div>
+        </div>
+        <div className="text-right">
+          {stdBps !== undefined && (
+            <div>
+              <div className="font-caveat text-sm text-wizard-text">
+                spread stddev
+              </div>
+              <div className="font-mono text-base text-wizard-black">
+                {Math.round(stdBps)} bps
+              </div>
+            </div>
+          )}
+          {minutesWide !== undefined && breakevenBps !== undefined && (
+            <div className="mt-1">
+              <div className="font-caveat text-xs text-wizard-text">
+                wide of {breakevenBps} bps for
+              </div>
+              <div className="font-mono text-sm text-wizard-black">
+                {fmtMinutes(minutesWide)}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function fmtMinutes(min: number): string {
+  if (min < 1) return '< 1 min';
+  if (min < 60) return `${Math.round(min)} min`;
+  const h = Math.floor(min / 60);
+  const m = Math.round(min - h * 60);
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
 // ---- Treasury --------------------------------------------------------------
@@ -1199,6 +1336,9 @@ export default function BridgePage() {
       )}
       <BridgeHero state={state} />
       <LiveEdgeSection state={state} />
+      {state.markets && state.markets.length > 0 && (
+        <MarketsSection state={state} />
+      )}
       <TreasurySection state={state} />
       <FiresSection state={state} />
       <HowItWorksSection />

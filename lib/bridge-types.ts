@@ -63,8 +63,30 @@ export interface DashboardState {
       baselineBps: Record<string, number>;
       /** recentBps - baselineBps. Negative means the spread has tightened. */
       deltaBps: Record<string, number>;
+      /** Sample stddev of |gross spread| over retention window, per token, in bps. */
+      stdBps?: Record<string, number>;
+      /** Minutes within the retained window the spread was wider than breakeven. */
+      minutesAboveBreakeven?: Record<string, number>;
+      /** Breakeven threshold (bps) used for minutesAboveBreakeven. */
+      breakevenBps?: number;
     };
   };
+  /**
+   * 24h market context: per-venue token volume + bridge's contribution.
+   */
+  markets?: TokenMarket[];
+}
+
+export interface TokenMarket {
+  token: string;
+  venues: Array<{
+    venue: 'Kraken' | 'DotSwap';
+    tokenVolume24h: number;
+    usdVolume24h: number;
+  }>;
+  totalUsd24h: number;
+  bridgeUsd24h: number;
+  bridgeSharePct: number;
 }
 
 export interface AssetDelta {
@@ -229,8 +251,33 @@ export const MOCK_STATE: DashboardState = {
       recentBps: { MIM: 215, DOG: -88 },
       baselineBps: { MIM: 380, DOG: 120 },
       deltaBps: { MIM: -165, DOG: -208 },
+      stdBps: { MIM: 32, DOG: 41 },
+      minutesAboveBreakeven: { MIM: 42, DOG: 18 },
+      breakevenBps: 330,
     },
   },
+  markets: [
+    {
+      token: 'MIM',
+      venues: [
+        { venue: 'Kraken', tokenVolume24h: 37_760_620, usdVolume24h: 10_494 },
+        { venue: 'DotSwap', tokenVolume24h: 44_560_841, usdVolume24h: 11_577 },
+      ],
+      totalUsd24h: 22_071,
+      bridgeUsd24h: 300,
+      bridgeSharePct: 1.36,
+    },
+    {
+      token: 'DOG',
+      venues: [
+        { venue: 'Kraken', tokenVolume24h: 232_593_560, usdVolume24h: 156_237 },
+        { venue: 'DotSwap', tokenVolume24h: 10_758_644, usdVolume24h: 7_158 },
+      ],
+      totalUsd24h: 163_395,
+      bridgeUsd24h: 0,
+      bridgeSharePct: 0,
+    },
+  ],
   config: {
     edgeThresholdPct: 0.5,
     maxTradeUsd: 100,
