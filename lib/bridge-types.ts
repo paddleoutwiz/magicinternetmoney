@@ -36,8 +36,22 @@ export interface DashboardState {
     realizedPnlUsd: number;
     /** USD notional flowed through the bridge (sum of every non-failed leg's requestedUsd). */
     bridgedVolumeUsd: number;
+    /** Cumulative whole-token MIM burned (lifetime). */
+    mimBurned?: number;
+    /** Number of completed burn transactions. */
+    burnCount?: number;
+    /** Current burn-reserve in sats (BTC accumulated for the next burn). */
+    burnReserveSats?: number;
     uptimeSec: number;
   };
+  /** Recent burn events (newest first). */
+  recentBurns?: Array<{
+    at: string;
+    txid: string;
+    mimBurned: number;
+    feeSats: number;
+    mode: string;
+  }>;
   config: {
     edgeThresholdPct: number;
     maxTradeUsd: number;
@@ -233,8 +247,20 @@ export const MOCK_STATE: DashboardState = {
     firesFailed: 0,
     realizedPnlUsd: -1.4,
     bridgedVolumeUsd: 50,
+    mimBurned: 10,
+    burnCount: 1,
+    burnReserveSats: 0,
     uptimeSec: 17_900,
   },
+  recentBurns: [
+    {
+      at: '2026-05-27T18:38:00Z',
+      txid: '511b20a1e3f7bd77aa11fc841ad198a4f9b6b67bd1cc1d0115a944f24506682d',
+      mimBurned: 10,
+      feeSats: 567,
+      mode: 'protocol',
+    },
+  ],
   inventoryDeltas: {
     recordedAt: '2026-05-25T18:00:00.000Z',
     totalUsdDelta: -1.4,

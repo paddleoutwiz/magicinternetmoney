@@ -81,14 +81,21 @@ function BridgeHero({ state }: { state: DashboardState }) {
           <span className="text-bitcoin-orange font-bold">Kraken</span> and{' '}
           <span className="text-wizard-blue font-bold">DotSwap</span>. When the
           two venues disagree on price, the wizard{' '}
-          <em className="text-wizard-highlight">casts a spell</em> across them
-          — tightening the spread for everyone in the ecosystem.{' '}
-          <strong>On real Bitcoin. On real money.</strong>
+          <em className="text-wizard-highlight">casts a spell</em> to tighten
+          the spread. Every captured spread becomes{' '}
+          <strong className="text-glitch-magenta">burned $MIM</strong> — making
+          every existing $MIM holder slightly richer in proportion.{' '}
+          <strong>Real Bitcoin. Real burns. On chain.</strong>
         </p>
 
         {/* Headline numbers — these measure ecosystem service, not operator P&L. */}
         <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-          <Stat label="Treasury" value={fmtUsd(state.inventory.totalUsd)} rotate="-rotate-2" />
+          <Stat
+            label="$MIM Burned 🔥"
+            value={(state.totals.mimBurned ?? 0).toLocaleString()}
+            rotate="-rotate-2"
+            color="positive"
+          />
           <Stat
             label="Cycles Closed"
             value={`${state.totals.firesComplete}`}
@@ -1107,6 +1114,66 @@ function compactStatus(status: string): string {
   }
 }
 
+// ---- Burns -----------------------------------------------------------------
+
+function BurnsSection({ state }: { state: DashboardState }) {
+  const burns = state.recentBurns ?? [];
+  const totalBurned = state.totals.mimBurned ?? 0;
+  return (
+    <section className="relative px-4 py-16 bg-gradient-to-b from-white/95 to-white/85">
+      <div className="max-w-5xl mx-auto">
+        <h2 className="text-4xl md:text-6xl font-derp text-wizard-black text-center mb-2 rotate-1">
+          🔥 $MIM Burned
+        </h2>
+        <p className="text-center font-caveat text-xl text-wizard-text mb-2 max-w-3xl mx-auto">
+          Every spread the wizard captures becomes <strong>$MIM removed
+          from circulation forever</strong>. Math-provable destruction
+          via the Runes protocol&apos;s native burn mechanism. Every
+          existing $MIM holder benefits in proportion to their holdings.
+        </p>
+        <p className="text-center font-derp text-3xl md:text-4xl text-glitch-magenta mt-6 mb-8">
+          {totalBurned.toLocaleString()} $MIM forever destroyed
+        </p>
+
+        <div className="space-y-2">
+          {burns.map((b) => (
+            <a
+              key={b.txid}
+              href={`https://mempool.space/tx/${b.txid}`}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="block bg-white border-2 border-wizard-black rounded-[10px_3px_10px_3px] shadow-[2px_2px_0_#040104] hover:shadow-[3px_3px_0_#040104] transition-all hover:scale-[1.005]"
+            >
+              <div className="px-4 py-3 grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto] gap-3 items-center">
+                <span className="text-2xl">🔥</span>
+                <span className="font-caveat text-base text-wizard-text">
+                  <strong className="text-glitch-magenta font-derp text-lg">
+                    {b.mimBurned.toLocaleString()} $MIM
+                  </strong>{' '}
+                  burned via {b.mode === 'protocol' ? 'protocol-native burn' : `transfer to ${b.txid.slice(0, 8)}…`}
+                </span>
+                <span className="hidden md:inline font-mono text-xs text-wizard-text">
+                  {shortenTxid(b.txid, 12, 8)} ↗
+                </span>
+                <span className="font-caveat text-sm text-wizard-text text-right whitespace-nowrap">
+                  {timeAgo(b.at)}
+                </span>
+              </div>
+            </a>
+          ))}
+        </div>
+
+        <p className="mt-8 text-center font-caveat text-base text-wizard-beard max-w-2xl mx-auto">
+          Burns are completely transparent and verifiable on chain. Click any
+          row to see the transaction on mempool.space. The runes are
+          destroyed by an edict targeting the runestone&apos;s OP_RETURN
+          output — every runes-aware indexer recognizes this as a burn.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 // ---- How it works ----------------------------------------------------------
 
 function HowItWorksSection() {
@@ -1135,6 +1202,12 @@ function HowItWorksSection() {
       body: "The Kraken leg fills in under a second. The L1 leg confirms in the next block or two. The wizard's L1 watcher advances the leg state when the transaction lands and updates the inventory snapshot.",
       color: 'magic-yellow',
     },
+    {
+      n: '5',
+      title: 'Burn $MIM 🔥',
+      body: "Every BTC sat the wizard captures from a spread crosses a threshold and triggers an automatic $MIM burn — protocol-native, math-provably destroyed via the Runes spec. The bridge runs continuously; the burn pile grows continuously; the supply shrinks. Real Bitcoin. Real burns.",
+      color: 'glitch-magenta',
+    },
   ];
 
   return (
@@ -1148,7 +1221,7 @@ function HowItWorksSection() {
           promotion.
         </p>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
           {steps.map((s, i) => (
             <div
               key={s.n}
@@ -1346,6 +1419,9 @@ export default function BridgePage() {
       )}
       <TreasurySection state={state} />
       <FiresSection state={state} />
+      {(state.recentBurns?.length ?? 0) > 0 && (
+        <BurnsSection state={state} />
+      )}
       <HowItWorksSection />
       <RunYourOwnSection state={state} />
       <BridgeFooter />
