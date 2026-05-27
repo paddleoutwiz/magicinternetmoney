@@ -1126,10 +1126,11 @@ function BurnsSection({ state }: { state: DashboardState }) {
           🔥 $MIM Burned
         </h2>
         <p className="text-center font-caveat text-xl text-wizard-text mb-2 max-w-3xl mx-auto">
-          Every spread the wizard captures becomes <strong>$MIM removed
-          from circulation forever</strong>. Math-provable destruction
-          via the Runes protocol&apos;s native burn mechanism. Every
-          existing $MIM holder benefits in proportion to their holdings.
+          BTC captured from cross-venue spreads is used to{' '}
+          <strong>buy fresh $MIM on DotSwap and then burn it</strong>{' '}
+          via the Runes protocol&apos;s native destruction mechanism.
+          Captured BTC in → burned $MIM out. Every existing $MIM holder
+          benefits in proportion to their holdings.
         </p>
         <p className="text-center font-derp text-3xl md:text-4xl text-glitch-magenta mt-6 mb-8">
           {totalBurned.toLocaleString()} $MIM forever destroyed
@@ -1204,8 +1205,8 @@ function HowItWorksSection() {
     },
     {
       n: '5',
-      title: 'Burn $MIM 🔥',
-      body: "Every BTC sat the wizard captures from a spread crosses a threshold and triggers an automatic $MIM burn — protocol-native, math-provably destroyed via the Runes spec. The bridge runs continuously; the burn pile grows continuously; the supply shrinks. Real Bitcoin. Real burns.",
+      title: 'Swap, then burn 🔥',
+      body: "BTC the wizard captures from spreads accumulates in a burn reserve. When the reserve crosses the threshold, the wizard buys fresh $MIM on DotSwap with that BTC — then immediately burns that $MIM in a protocol-native destruction (edict targets the runestone's OP_RETURN; every runes-aware indexer recognizes it as a burn). Captured BTC → burned $MIM. Conservation holds.",
       color: 'glitch-magenta',
     },
   ];
