@@ -1604,7 +1604,6 @@ export default function BridgePage() {
         <MarketsSection state={state} />
       )}
       <TreasurySection state={state} />
-      {state.totals.btcPnl && <BtcPnlSection state={state} />}
       <FiresSection state={state} />
       {(state.recentBurns?.length ?? 0) > 0 && (
         <BurnsSection state={state} />
