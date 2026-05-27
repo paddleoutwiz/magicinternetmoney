@@ -52,6 +52,12 @@ export interface DashboardState {
     feeSats: number;
     mode: string;
   }>;
+  /** Kill-switch state. When active, irreversible actions are paused. */
+  killSwitch?: {
+    active: boolean;
+    reason?: string;
+    path: string;
+  };
   config: {
     edgeThresholdPct: number;
     maxTradeUsd: number;

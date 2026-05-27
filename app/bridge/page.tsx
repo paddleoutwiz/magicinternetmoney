@@ -1412,6 +1412,16 @@ export default function BridgePage() {
           🪄 design preview · mock data
         </div>
       )}
+      {state.killSwitch?.active && (
+        <div className="sticky top-0 z-50 bg-glitch-magenta text-white border-b-4 border-wizard-black px-4 py-3 text-center font-derp text-base md:text-lg shadow-[0_4px_0_#040104]">
+          ⏸ BRIDGE PAUSED ·{' '}
+          <span className="font-caveat font-normal">
+            {state.killSwitch.reason ?? 'manual halt'}
+          </span>{' '}
+          · the wizard is on a break; all spell-casting is suspended until
+          the operator un-pauses
+        </div>
+      )}
       <BridgeHero state={state} />
       <LiveEdgeSection state={state} />
       {state.markets && state.markets.length > 0 && (
