@@ -1,6 +1,6 @@
 'use client';
 
-import { MOCK_STATE, type DashboardState, type TokenEdge } from '@/lib/bridge-types';
+import { MOCK_STATE, type DashboardState, type SizedEdge, type TokenEdge } from '@/lib/bridge-types';
 import {
   fmtUsd,
   fmtPct,
@@ -366,6 +366,60 @@ function Sparkline({
   );
 }
 
+/**
+ * One-line plain-English summary of which venue is richer and which direction
+ * the wizard would therefore trade. The grossSpreadPct on the edge is signed
+ * relative to (kraken - dotswap) / dotswap, so:
+ *   positive  -> Kraken richer, wizard buys DotSwap & sells Kraken
+ *   negative  -> DotSwap richer, wizard buys Kraken & sells DotSwap
+ */
+function SpreadExplainer({
+  edge,
+  bestDirection,
+}: {
+  edge: TokenEdge;
+  bestDirection: SizedEdge['direction'];
+}) {
+  const gross = edge.grossSpreadPct;
+  const abs = Math.abs(gross);
+  const krakenRicher = gross > 0;
+  // Match the rich/cheap framing to the wizard's chosen direction, so a user
+  // can read these two lines together and they always agree.
+  const wizardLine =
+    bestDirection === 'buy_dotswap_sell_kraken'
+      ? 'wizard buys DotSwap, sells Kraken'
+      : 'wizard buys Kraken, sells DotSwap';
+  return (
+    <div className="font-caveat text-base text-wizard-text leading-snug">
+      <div>
+        gross spread{' '}
+        <strong className="font-mono">{fmtPct(abs)}</strong>{' '}
+        <span className="text-wizard-beard">·</span>{' '}
+        <span>
+          <strong
+            className={
+              krakenRicher ? 'text-bitcoin-orange' : 'text-wizard-blue'
+            }
+          >
+            {krakenRicher ? 'Kraken' : 'DotSwap'}
+          </strong>{' '}
+          is richer than{' '}
+          <strong
+            className={
+              krakenRicher ? 'text-wizard-blue' : 'text-bitcoin-orange'
+            }
+          >
+            {krakenRicher ? 'DotSwap' : 'Kraken'}
+          </strong>
+        </span>
+      </div>
+      <div className="text-wizard-beard text-sm">
+        → {wizardLine}. Net of fees at execution size:
+      </div>
+    </div>
+  );
+}
+
 function EdgeCard({ edge, threshold }: { edge: TokenEdge; threshold: number }) {
   // Find the best (max-net-USD) sized edge to highlight
   const best = edge.sized.reduce((a, b) => (b.netUsd > a.netUsd ? b : a), edge.sized[0]!);
@@ -417,11 +471,8 @@ function EdgeCard({ edge, threshold }: { edge: TokenEdge; threshold: number }) {
 
       {/* Gross + sized table */}
       <div className="bg-[#f5f5f0] border-2 border-wizard-black rounded-[10px_3px_10px_3px] p-3">
-        <div className="font-caveat text-lg text-wizard-text mb-2">
-          gross spread <strong>{fmtPct(edge.grossSpreadPct)}</strong>{' '}
-          <span className="text-wizard-beard">— but at execution sizes:</span>
-        </div>
-        <table className="w-full font-mono text-sm">
+        <SpreadExplainer edge={edge} bestDirection={best.direction} />
+        <table className="w-full font-mono text-sm mt-2">
           <thead>
             <tr className="text-wizard-text border-b border-wizard-beard">
               <th className="text-left py-1 font-caveat text-base">size</th>
@@ -431,14 +482,38 @@ function EdgeCard({ edge, threshold }: { edge: TokenEdge; threshold: number }) {
           </thead>
           <tbody>
             {edge.sized.map((s) => {
+              const isPicked = s.direction === best.direction;
               const profitable = s.netUsd > 0;
               return (
-                <tr key={s.sizeUsd} className="border-b border-wizard-beard/30 last:border-0">
-                  <td className="py-1">${s.sizeUsd}</td>
+                <tr
+                  key={s.sizeUsd + s.direction}
+                  className={`border-b border-wizard-beard/30 last:border-0 ${
+                    isPicked
+                      ? 'bg-wizard-highlight/15'
+                      : 'opacity-40'
+                  }`}
+                  title={
+                    isPicked
+                      ? 'The wizard would pick this direction'
+                      : 'Wrong direction — buying rich, selling cheap. Ignored.'
+                  }
+                >
+                  <td className="py-1 pl-1">
+                    {isPicked ? (
+                      <span className="text-wizard-highlight mr-1">▶</span>
+                    ) : (
+                      <span className="text-wizard-beard mr-1">·</span>
+                    )}
+                    ${s.sizeUsd}
+                  </td>
                   <td className="py-1 text-xs">{directionLabel(s.direction)}</td>
                   <td
                     className={`py-1 text-right font-bold ${
-                      profitable ? 'text-wizard-highlight' : 'text-wizard-text'
+                      profitable
+                        ? 'text-wizard-highlight'
+                        : isPicked
+                          ? 'text-wizard-black'
+                          : 'text-wizard-text'
                     }`}
                   >
                     {fmtUsd(s.netUsd)} ({fmtPct(s.netPct)})
@@ -448,6 +523,11 @@ function EdgeCard({ edge, threshold }: { edge: TokenEdge; threshold: number }) {
             })}
           </tbody>
         </table>
+        <p className="mt-2 font-caveat text-xs text-wizard-beard">
+          The wizard picks the highlighted direction. The other row is shown
+          for transparency — it's what would happen if you traded the wrong
+          way around (buying the rich venue, selling the cheap one).
+        </p>
       </div>
     </div>
   );
