@@ -66,6 +66,23 @@ export interface DashboardState {
     feeSats: number;
     mode: string;
   }>;
+  /**
+   * Live state of the burn loop's pipeline. Drives the "Next Burn"
+   * panel — how close to the threshold, what's in flight, what's
+   * waiting on confirmation.
+   */
+  burnPipeline?: {
+    thresholdSats: number;
+    reserveSats: number;
+    /** 0..1. */
+    progress: number;
+    pendingSwap: {
+      startedAt: string;
+      swapTxId: string;
+      btcSpentSats: number;
+      expectedMimReceived: number;
+    } | null;
+  };
   /** Kill-switch state. When active, irreversible actions are paused. */
   killSwitch?: {
     active: boolean;
@@ -290,6 +307,12 @@ export const MOCK_STATE: DashboardState = {
       mode: 'protocol',
     },
   ],
+  burnPipeline: {
+    thresholdSats: 100_000,
+    reserveSats: 24_500,
+    progress: 0.245,
+    pendingSwap: null,
+  },
   inventoryDeltas: {
     recordedAt: '2026-05-25T18:00:00.000Z',
     totalUsdDelta: -1.4,

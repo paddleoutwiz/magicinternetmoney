@@ -1198,6 +1198,107 @@ function BtcPnlSection({ state }: { state: DashboardState }) {
   );
 }
 
+// ---- Next Burn panel -------------------------------------------------------
+
+function NextBurnPanel({
+  pipeline,
+}: {
+  pipeline: NonNullable<DashboardState['burnPipeline']>;
+}) {
+  const { thresholdSats, reserveSats, progress, pendingSwap } = pipeline;
+  const pct = Math.min(100, Math.max(0, progress * 100));
+  const fmtSats = (s: number) => s.toLocaleString();
+
+  // State machine: pendingSwap -> phase 2; else if reserve >= threshold ->
+  // phase 1 about to fire; else -> idle/building.
+  if (pendingSwap) {
+    const elapsedMs = Math.max(
+      0,
+      Date.now() - new Date(pendingSwap.startedAt).getTime(),
+    );
+    const elapsedMin = Math.round(elapsedMs / 60_000);
+    const expectedMim = pendingSwap.expectedMimReceived;
+    return (
+      <div className="bg-glitch-magenta/10 border-2 border-glitch-magenta rounded-[10px_3px_10px_3px] shadow-[2px_2px_0_#040104] p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="inline-block w-2 h-2 bg-glitch-magenta rounded-full animate-pulse" />
+          <span className="font-derp text-base text-glitch-magenta">
+            burn in flight · phase 2/2
+          </span>
+        </div>
+        <p className="font-caveat text-base text-wizard-text leading-snug mb-2">
+          The wizard bought{' '}
+          <strong>{expectedMim.toLocaleString()} $MIM</strong> on DotSwap
+          with {fmtSats(pendingSwap.btcSpentSats)} sats of captured BTC.
+          Waiting for the swap to confirm on chain ({elapsedMin}{' '}
+          minute{elapsedMin === 1 ? '' : 's'} ago). As soon as it does,
+          that $MIM gets burned automatically.
+        </p>
+        <a
+          href={`https://mempool.space/tx/${pendingSwap.swapTxId}`}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="inline-block font-mono text-xs text-wizard-text hover:text-glitch-magenta underline-offset-2 hover:underline"
+        >
+          swap tx: {pendingSwap.swapTxId.slice(0, 16)}…{' '}
+          {pendingSwap.swapTxId.slice(-8)} ↗
+        </a>
+      </div>
+    );
+  }
+
+  const aboveThreshold = reserveSats >= thresholdSats;
+  return (
+    <div className="bg-white border-2 border-wizard-black rounded-[10px_3px_10px_3px] shadow-[2px_2px_0_#040104] p-4">
+      <div className="flex items-baseline justify-between mb-2 flex-wrap gap-2">
+        <span className="font-derp text-base text-wizard-black">
+          🪄 next burn
+        </span>
+        <span className="font-caveat text-sm text-wizard-text">
+          <strong className="font-mono text-base text-wizard-black">
+            {fmtSats(reserveSats)}
+          </strong>
+          <span className="text-wizard-beard">
+            {' '}
+            / {fmtSats(thresholdSats)} sats
+          </span>
+          <span className="text-wizard-beard ml-2">
+            ({pct.toFixed(0)}%)
+          </span>
+        </span>
+      </div>
+      <div
+        className="h-3 bg-[#f5f5f0] border-2 border-wizard-black rounded-[6px_2px_6px_2px] overflow-hidden mb-3"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(pct)}
+      >
+        <div
+          className="h-full bg-glitch-magenta transition-all"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="font-caveat text-sm text-wizard-text leading-snug">
+        {aboveThreshold ? (
+          <>
+            Reserve is past the threshold — the wizard will broadcast
+            a BTC → $MIM swap on the next 30-minute burn-loop tick.
+          </>
+        ) : (
+          <>
+            Each completed Kraken → DotSwap arb cycle drops captured BTC
+            into the burn reserve. Once the reserve crosses{' '}
+            <strong>{fmtSats(thresholdSats)} sats</strong> (≈ $75 at
+            current BTC), the wizard automatically buys $MIM with the
+            entire reserve and burns it.
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
+
 // ---- Cumulative burn chart -------------------------------------------------
 
 function CumulativeBurnChart({
@@ -1301,9 +1402,21 @@ function BurnsSection({ state }: { state: DashboardState }) {
           Captured BTC in → burned $MIM out. Every existing $MIM holder
           benefits in proportion to their holdings.
         </p>
-        <p className="text-center font-derp text-3xl md:text-4xl text-glitch-magenta mt-6 mb-4">
-          {totalBurned.toLocaleString()} $MIM forever destroyed
-        </p>
+        {totalBurned > 0 ? (
+          <p className="text-center font-derp text-3xl md:text-4xl text-glitch-magenta mt-6 mb-4">
+            {totalBurned.toLocaleString()} $MIM forever destroyed
+          </p>
+        ) : (
+          <p className="text-center font-caveat text-lg text-wizard-beard mt-6 mb-4">
+            no burns yet — the wizard is building up the burn reserve
+          </p>
+        )}
+
+        {state.burnPipeline && (
+          <div className="mb-6">
+            <NextBurnPanel pipeline={state.burnPipeline} />
+          </div>
+        )}
 
         {burns.length >= 1 && (
           <div className="mb-6">
@@ -1622,9 +1735,14 @@ export default function BridgePage() {
       )}
       <TreasurySection state={state} />
       <FiresSection state={state} />
-      {(state.recentBurns?.length ?? 0) > 0 && (
-        <BurnsSection state={state} />
-      )}
+      {/*
+        Show BurnsSection whenever we have burn pipeline state OR a past
+        burn. The Next Burn panel surfaces what's coming even before the
+        first burn fires — important context for viewers who'd otherwise
+        wonder why the burn count is low.
+      */}
+      {((state.recentBurns?.length ?? 0) > 0 ||
+        state.burnPipeline !== undefined) && <BurnsSection state={state} />}
       <HowItWorksSection />
       <RunYourOwnSection state={state} />
       <BridgeFooter />
