@@ -1198,6 +1198,91 @@ function BtcPnlSection({ state }: { state: DashboardState }) {
   );
 }
 
+// ---- Cumulative burn chart -------------------------------------------------
+
+function CumulativeBurnChart({
+  burns,
+}: {
+  burns: DashboardState['recentBurns'] extends infer T
+    ? T extends Array<infer U>
+      ? U[]
+      : never
+    : never;
+}) {
+  // Order by time ascending; produce cumulative running total.
+  const sorted = [...burns].sort(
+    (a, b) => new Date(a.at).getTime() - new Date(b.at).getTime(),
+  );
+  if (sorted.length === 0) return null;
+  let running = 0;
+  const points = sorted.map((b) => {
+    running += b.mimBurned;
+    return { t: new Date(b.at).getTime(), v: running };
+  });
+  // Prepend a (t0, 0) point at the first burn's time minus 1 hour for
+  // a visible step into the chart.
+  const t0 = points[0]!.t - 60 * 60 * 1000;
+  points.unshift({ t: t0, v: 0 });
+  // Append a "now" point at the same running total so the chart shows
+  // a plateau through to the present.
+  const nowT = Date.now();
+  if (nowT > points[points.length - 1]!.t) {
+    points.push({ t: nowT, v: running });
+  }
+
+  const tMin = points[0]!.t;
+  const tMax = points[points.length - 1]!.t;
+  const vMax = Math.max(running, 1);
+  const W = 720;
+  const H = 90;
+  const pad = 8;
+  const x = (t: number) =>
+    pad + ((t - tMin) / (tMax - tMin || 1)) * (W - 2 * pad);
+  const y = (v: number) => H - pad - (v / vMax) * (H - 2 * pad);
+
+  // Step polyline: for each pair of points, draw horizontal to next time,
+  // then vertical to next value (so the chart looks like a staircase of
+  // discrete burns rather than a sloped line).
+  const segments: string[] = [`M ${x(points[0]!.t).toFixed(1)} ${y(points[0]!.v).toFixed(1)}`];
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1]!;
+    const curr = points[i]!;
+    segments.push(`L ${x(curr.t).toFixed(1)} ${y(prev.v).toFixed(1)}`);
+    segments.push(`L ${x(curr.t).toFixed(1)} ${y(curr.v).toFixed(1)}`);
+  }
+  const path = segments.join(' ');
+  // Area path for the fill.
+  const areaPath =
+    `${path} L ${x(points[points.length - 1]!.t).toFixed(1)} ${H - pad}` +
+    ` L ${x(points[0]!.t).toFixed(1)} ${H - pad} Z`;
+
+  const fmtDate = (t: number): string =>
+    new Date(t).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    });
+
+  return (
+    <div className="bg-white border-2 border-wizard-black rounded-[10px_3px_10px_3px] shadow-[2px_2px_0_#040104] p-4">
+      <div className="font-caveat text-base text-wizard-text mb-2 text-center">
+        cumulative $MIM destroyed
+      </div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="block w-full"
+        preserveAspectRatio="none"
+      >
+        <path d={areaPath} fill="#ff007f" fillOpacity="0.15" />
+        <path d={path} fill="none" stroke="#ff007f" strokeWidth="2" />
+      </svg>
+      <div className="flex justify-between font-caveat text-xs text-wizard-beard mt-1">
+        <span>{fmtDate(tMin)}</span>
+        <span>{fmtDate(tMax)}</span>
+      </div>
+    </div>
+  );
+}
+
 // ---- Burns -----------------------------------------------------------------
 
 function BurnsSection({ state }: { state: DashboardState }) {
@@ -1216,9 +1301,15 @@ function BurnsSection({ state }: { state: DashboardState }) {
           Captured BTC in → burned $MIM out. Every existing $MIM holder
           benefits in proportion to their holdings.
         </p>
-        <p className="text-center font-derp text-3xl md:text-4xl text-glitch-magenta mt-6 mb-8">
+        <p className="text-center font-derp text-3xl md:text-4xl text-glitch-magenta mt-6 mb-4">
           {totalBurned.toLocaleString()} $MIM forever destroyed
         </p>
+
+        {burns.length >= 1 && (
+          <div className="mb-6">
+            <CumulativeBurnChart burns={burns} />
+          </div>
+        )}
 
         <div className="space-y-2">
           {burns.map((b) => (
