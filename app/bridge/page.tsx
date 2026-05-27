@@ -1114,6 +1114,95 @@ function compactStatus(status: string): string {
   }
 }
 
+// ---- BTC P&L ---------------------------------------------------------------
+
+function BtcPnlSection({ state }: { state: DashboardState }) {
+  const p = state.totals.btcPnl!;
+  const netBtc = p.netSats / 1e8;
+  const isPositive = p.netSats >= 0;
+  const formatBtc = (sats: number) => {
+    const btc = sats / 1e8;
+    if (Math.abs(btc) >= 0.001) return `${btc.toFixed(6)} BTC`;
+    return `${sats.toLocaleString()} sats`;
+  };
+  return (
+    <section className="relative px-4 py-12 bg-white/90">
+      <div className="max-w-4xl mx-auto">
+        <h2 className="text-3xl md:text-5xl font-derp text-wizard-black text-center mb-2 -rotate-1">
+          ₿ The Honest Scoreboard
+        </h2>
+        <p className="text-center font-caveat text-lg text-wizard-text mb-8 max-w-2xl mx-auto">
+          The bridge&apos;s lifetime BTC P&amp;L. Operator portfolio is
+          denominated in BTC + tokens; a USD score would just measure BTC
+          drift. This is what the bridge has actually captured.
+        </p>
+        <div className="bg-white border-3 border-wizard-black rounded-[18px_5px_18px_5px] shadow-[4px_4px_0_#040104] p-6">
+          <div className="text-center mb-6">
+            <div className="font-caveat text-base text-wizard-text mb-1">
+              net BTC since launch
+            </div>
+            <div
+              className={`font-derp text-5xl md:text-6xl ${
+                isPositive ? 'text-wizard-highlight' : 'text-glitch-magenta'
+              }`}
+            >
+              {isPositive ? '+' : ''}
+              {netBtc >= 0.001 || netBtc <= -0.001
+                ? `${netBtc.toFixed(8)} BTC`
+                : `${p.netSats.toLocaleString()} sats`}
+            </div>
+            <div className="font-caveat text-sm text-wizard-beard mt-2">
+              {isPositive
+                ? 'the bridge is net-capturing BTC'
+                : 'the bridge is net-bleeding BTC (fees + outflows exceed inflows so far)'}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+            <div className="text-center border-r border-wizard-beard/40 last:border-0">
+              <div className="font-caveat text-sm text-wizard-text">inflow</div>
+              <div className="font-mono text-base text-wizard-black">
+                {formatBtc(p.inflowSats)}
+              </div>
+              <div className="font-caveat text-xs text-wizard-beard">
+                from {p.inflowCycles} cycle{p.inflowCycles === 1 ? '' : 's'}
+              </div>
+            </div>
+            <div className="text-center border-r border-wizard-beard/40 last:border-0">
+              <div className="font-caveat text-sm text-wizard-text">outflow</div>
+              <div className="font-mono text-base text-wizard-black">
+                {formatBtc(p.outflowSats)}
+              </div>
+              <div className="font-caveat text-xs text-wizard-beard">
+                {p.outflowCycles} cycle{p.outflowCycles === 1 ? '' : 's'} + fees
+              </div>
+            </div>
+            <div className="text-center border-r border-wizard-beard/40 last:border-0">
+              <div className="font-caveat text-sm text-wizard-text">burns</div>
+              <div className="font-mono text-base text-wizard-black">
+                {p.burnsCounted}
+              </div>
+              <div className="font-caveat text-xs text-wizard-beard">
+                committed
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="font-caveat text-sm text-wizard-text">
+                in flight
+              </div>
+              <div className="font-mono text-base text-wizard-black">
+                {p.pendingSwapSats > 0 ? formatBtc(p.pendingSwapSats) : '—'}
+              </div>
+              <div className="font-caveat text-xs text-wizard-beard">
+                {p.pendingSwapSats > 0 ? 'swap pending' : 'idle'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ---- Burns -----------------------------------------------------------------
 
 function BurnsSection({ state }: { state: DashboardState }) {
@@ -1429,6 +1518,7 @@ export default function BridgePage() {
         <MarketsSection state={state} />
       )}
       <TreasurySection state={state} />
+      {state.totals.btcPnl && <BtcPnlSection state={state} />}
       <FiresSection state={state} />
       {(state.recentBurns?.length ?? 0) > 0 && (
         <BurnsSection state={state} />

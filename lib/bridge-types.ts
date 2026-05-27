@@ -42,6 +42,20 @@ export interface DashboardState {
     burnCount?: number;
     /** Current burn-reserve in sats (BTC accumulated for the next burn). */
     burnReserveSats?: number;
+    /**
+     * BTC-denominated lifetime P&L. The honest scoreboard: positive means
+     * the bridge has captured net BTC since launch; negative means it's
+     * net-bleeding BTC. Not contaminated by BTC/USD drift.
+     */
+    btcPnl?: {
+      inflowSats: number;
+      outflowSats: number;
+      netSats: number;
+      inflowCycles: number;
+      outflowCycles: number;
+      burnsCounted: number;
+      pendingSwapSats: number;
+    };
     uptimeSec: number;
   };
   /** Recent burn events (newest first). */
@@ -256,6 +270,15 @@ export const MOCK_STATE: DashboardState = {
     mimBurned: 10,
     burnCount: 1,
     burnReserveSats: 0,
+    btcPnl: {
+      inflowSats: 0,
+      outflowSats: 1167,
+      netSats: -1167,
+      inflowCycles: 0,
+      outflowCycles: 0,
+      burnsCounted: 1,
+      pendingSwapSats: 0,
+    },
     uptimeSec: 17_900,
   },
   recentBurns: [
