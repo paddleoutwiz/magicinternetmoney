@@ -197,11 +197,6 @@ function LiveEdgeSection({ state }: { state: DashboardState }) {
             <strong>L1 fee</strong>: {state.market.btcFeeRate?.fastestFee ?? '?'} sat/vB
           </span>
           <span className="text-wizard-beard">·</span>
-          <span title="How far past break-even the wizard requires before firing. Negative means it's willing to subsidize spread convergence.">
-            <strong>Convergence floor</strong>:{' '}
-            {fmtPct(state.config.edgeThresholdPct)}
-          </span>
-          <span className="text-wizard-beard">·</span>
           <span>
             <strong>Max trade</strong>: ${state.config.maxTradeUsd}
           </span>
