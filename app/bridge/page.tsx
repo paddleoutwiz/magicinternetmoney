@@ -1287,8 +1287,9 @@ function NextBurnPanel({
           </>
         ) : (
           <>
-            Each completed Kraken → DotSwap arb cycle drops captured BTC
-            into the burn reserve. Once the reserve crosses{' '}
+            Every profitable arb cycle adds its <strong>net gain</strong>{' '}
+            (in BTC-equivalent sats) to the reserve — both directions
+            count. Losing cycles don't. Once the reserve crosses{' '}
             <strong>{fmtSats(thresholdSats)} sats</strong> (≈ $75 at
             current BTC), the wizard automatically buys $MIM with the
             entire reserve and burns it.
