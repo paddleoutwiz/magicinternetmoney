@@ -1445,340 +1445,195 @@ function BurnsSection({ state }: { state: DashboardState }) {
 // ---- How it works ----------------------------------------------------------
 
 /**
- * Flow diagram for the wizard's mechanism.
+ * Three-band vertical layout for the "how it works" section.
  *
- * Layout invariants (learned the hard way after v1 mispositioned every
- * step badge — see the redesign discussion in the commit log):
+ * Why this design exists: an earlier attempt embedded the whole flow as a
+ * single big SVG with hand-placed coordinates. Every change of one
+ * element risked overlap with another, and three rounds of iteration
+ * never landed clean. The fundamental problem was that we were using
+ * SVG for things HTML+CSS already does well (text alignment, spacing,
+ * responsive wrap, font inheritance). This rewrite stops fighting
+ * coordinates.
  *
- *   - Kraken + DotSwap are twin pillars at the top. They are the two
- *     venues whose spread the wizard reconciles.
- *   - Wallet is the bottom anchor. All round-trip flows terminate there;
- *     captured BTC accumulates in the reserve sub-block.
- *   - Step 1 (Watch) spans the top, above both venues — it's a survey
- *     of the two pillars.
- *   - Step 2 (Measure) sits in the DEAD CENTER between the two venues.
- *     It's a decision, not a flow, so it shouldn't sit on any arrow.
- *   - Step 3 (Fire both legs) wraps BOTH arrow pairs with a bracket —
- *     the firing is simultaneous, not biased to one venue.
- *   - Step 4 (Settle) is a footer label across the bottom of the
- *     wallet, where both legs land on chain.
- *   - Step 5 (Burn) is its own block below the wallet, visually
- *     connected to the burn reserve sub-block above.
+ * The bands:
+ *   1. A small topology illustration (just Kraken ↔ DotSwap with a
+ *      single small SVG — the only piece that truly needs to be drawn)
+ *   2. Steps 1-4 as a 2×2 grid of normal HTML cards on md+ viewports;
+ *      single column stacked on mobile.
+ *   3. Step 5 ("swap, then burn") as a wide, visually distinct card
+ *      with a magenta accent, signaling it's the *outcome*, not a
+ *      peer of steps 1-4.
  *
- * Each arrow gets its OWN single-direction label (no shared "tokens /
- * USD" labels that don't tell you which arrow does which).
- *
- * The legend strip below the diagram is gone — the diagram now does
- * the explaining and the legend was redundant.
- *
- * viewBox is 1000x760; the SVG scales to its container.
+ * Native CSS handles all spacing/sizing. No coordinate math anywhere
+ * except the band-1 SVG, which is small enough (and simple enough)
+ * that it's stable.
  */
 function HowItWorksDiagram({
   steps,
 }: {
   steps: Array<{ n: string; title: string; body: string; color: string }>;
 }) {
-  const C = {
-    kraken: '#f09f00', // bitcoin-orange
-    wallet: '#040104', // wizard-black
-    dotswap: '#2f53fe', // wizard-blue
-    burn: '#ff00ff', // glitch-magenta
-    reserve: '#6ef405', // wizard-highlight
-    text: '#040104',
-    line: '#040104',
-    subtle: '#666',
-  };
-  const badge = (n: string): string =>
-    ({ '1': C.kraken, '2': C.dotswap, '3': C.reserve, '4': '#fce300', '5': C.burn }[n] ?? '#999');
-
-  // Font families must match the @font-face / Google Fonts names exactly.
-  // SVG text doesn't pick up Tailwind utility classes; we have to spell
-  // out the family. Case matters: 'Derp' / 'Caveat', not lowercase.
-  const FONT_TITLE = "'Derp', 'Permanent Marker', cursive";
-  const FONT_BODY = "'Caveat', cursive";
-
-  const venueColor = {
-    kraken: C.kraken,
-    wallet: C.wallet,
-    dotswap: C.dotswap,
-  };
+  // Step 5 lives in its own band. Steps 1-4 fill band 2.
+  const tradeSteps = steps.filter((s) => s.n !== '5');
+  const burnStep = steps.find((s) => s.n === '5');
 
   return (
-    <div className="bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[4px_4px_0_#040104] p-4 md:p-6">
-      <svg
-        viewBox="0 0 1000 760"
-        className="block w-full h-auto"
-        preserveAspectRatio="xMidYMid meet"
-        role="img"
-        aria-label="How the wizard works: a flow diagram"
-      >
-        <defs>
-          <marker
-            id="arrow"
-            viewBox="0 0 10 10"
-            refX="9"
-            refY="5"
-            markerWidth="8"
-            markerHeight="8"
-            orient="auto-start-reverse"
-          >
-            <path d="M 0 0 L 10 5 L 0 10 z" fill={C.line} />
-          </marker>
-        </defs>
+    <div className="space-y-6">
+      {/* ─── Band 1 — topology overview ─── */}
+      <div className="bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-5 -rotate-[0.3deg]">
+        <VenueTopologySvg />
+        <p className="mt-3 text-center font-caveat text-base md:text-lg text-wizard-text">
+          the wizard watches both venues every 30 seconds
+        </p>
+      </div>
 
-        {/* ============================================================ */}
-        {/* STEP 1 — Watch (top band, spans both venues)                  */}
-        {/* ============================================================ */}
-        <g>
-          <line
-            x1="160"
-            y1="80"
-            x2="840"
-            y2="80"
-            stroke={C.line}
-            strokeWidth="2"
-            strokeDasharray="6 4"
-          />
-          <line x1="160" y1="80" x2="160" y2="115" stroke={C.line} strokeWidth="2" strokeDasharray="6 4" />
-          <line x1="840" y1="80" x2="840" y2="115" stroke={C.line} strokeWidth="2" strokeDasharray="6 4" />
-          <circle cx="500" cy="50" r="28" fill={badge('1')} stroke={C.line} strokeWidth="3" />
-          <text
-            x="500"
-            y="60"
-            textAnchor="middle"
-            fontFamily={FONT_TITLE}
-            fontSize="28"
-            fontWeight="700"
-            fill={C.text}
-          >
-            1
-          </text>
-          <text
-            x="500"
-            y="20"
-            textAnchor="middle"
-            fontFamily={FONT_TITLE}
-            fontSize="16"
-            fontWeight="700"
-            fill={C.text}
-          >
-            watch both venues · every 30s
-          </text>
-        </g>
-
-        {/* ============================================================ */}
-        {/* Kraken (top-left) + DotSwap (top-right)                       */}
-        {/* ============================================================ */}
-        {/* Kraken */}
-        <g>
-          <rect x="60" y="115" width="240" height="160" rx="14" ry="14" fill="#fff" stroke={C.line} strokeWidth="3" />
-          <rect x="60" y="115" width="240" height="42" rx="14" ry="14" fill={venueColor.kraken} stroke={C.line} strokeWidth="3" />
-          <text x="180" y="145" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="26" fontWeight="700" fill={C.text}>
-            Kraken
-          </text>
-          <text x="180" y="190" textAnchor="middle" fontFamily={FONT_BODY} fontSize="18" fill={C.text}>
-            CEX · order book
-          </text>
-          <text x="180" y="218" textAnchor="middle" fontFamily={FONT_BODY} fontSize="20" fill={C.text}>
-            $USD · $MIM · $DOG
-          </text>
-          <text x="180" y="252" textAnchor="middle" fontFamily={FONT_BODY} fontSize="14" fill={C.subtle}>
-            via Kraken CLI
-          </text>
-        </g>
-
-        {/* DotSwap */}
-        <g>
-          <rect x="700" y="115" width="240" height="160" rx="14" ry="14" fill="#fff" stroke={C.line} strokeWidth="3" />
-          <rect x="700" y="115" width="240" height="42" rx="14" ry="14" fill={venueColor.dotswap} stroke={C.line} strokeWidth="3" />
-          <text x="820" y="145" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="26" fontWeight="700" fill="#fff">
-            DotSwap
-          </text>
-          <text x="820" y="190" textAnchor="middle" fontFamily={FONT_BODY} fontSize="18" fill={C.text}>
-            L1 AMM · runes
-          </text>
-          <text x="820" y="218" textAnchor="middle" fontFamily={FONT_BODY} fontSize="20" fill={C.text}>
-            BTC ↔ $MIM ↔ $DOG
-          </text>
-          <text x="820" y="252" textAnchor="middle" fontFamily={FONT_BODY} fontSize="14" fill={C.subtle}>
-            on Bitcoin L1
-          </text>
-        </g>
-
-        {/* ============================================================ */}
-        {/* STEP 2 — Measure (DEAD CENTER between the two venues)         */}
-        {/* ============================================================ */}
-        <g>
-          <rect x="370" y="155" width="260" height="80" rx="12" ry="12" fill="#fff" stroke={C.dotswap} strokeWidth="2.5" strokeDasharray="6 4" />
-          <circle cx="395" cy="183" r="18" fill={badge('2')} stroke={C.line} strokeWidth="2.5" />
-          <text x="395" y="190" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="20" fontWeight="700" fill={C.text}>
-            2
-          </text>
-          <text x="500" y="180" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="15" fontWeight="700" fill={C.text}>
-            measure the gap
-          </text>
-          <text x="500" y="202" textAnchor="middle" fontFamily={FONT_BODY} fontSize="14" fill={C.subtle}>
-            spread vs round-trip fees
-          </text>
-          <text x="500" y="222" textAnchor="middle" fontFamily={FONT_BODY} fontSize="13" fill={C.subtle}>
-            (decision; nothing has moved yet)
-          </text>
-        </g>
-
-        {/* ============================================================ */}
-        {/* STEP 3 — Fire both legs.                                      */}
-        {/* Positioned in the gap between the venue bottoms (y=275) and   */}
-        {/* the start of the diagonal arrows (y=395). The vertical stems  */}
-        {/* at x=160,200,800,840 leave the middle (x≈300-700) clear.      */}
-        {/* ============================================================ */}
-        <g>
-          <circle cx="500" cy="320" r="22" fill={badge('3')} stroke={C.line} strokeWidth="3" />
-          <text x="500" y="328" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="22" fontWeight="700" fill={C.text}>
-            3
-          </text>
-          <text x="500" y="365" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="15" fontWeight="700" fill={C.text}>
-            fire both legs at once
-          </text>
-          <text x="500" y="383" textAnchor="middle" fontFamily={FONT_BODY} fontSize="13" fill={C.subtle}>
-            Kraken IOC + DotSwap PSBT, broadcast in parallel
-          </text>
-        </g>
-
-        {/* ============================================================ */}
-        {/* Arrows: Kraken ↕ Wallet (left), DotSwap ↕ Wallet (right)      */}
-        {/* Each arrow has its own single-direction label.                */}
-        {/* ============================================================ */}
-
-        {/* Kraken ↔ Wallet (left arrow pair).
-            Down arrow (Kraken → Wallet) carries tokens; labeled NEAR THE
-            TOP next to its origin. Up arrow (Wallet → Kraken) carries
-            BTC/$USD; labeled NEAR THE BOTTOM next to its origin.
-            This spreads the labels vertically so they don't pile up in
-            the middle and don't fight the wallet block. */}
-        <g>
-          {/* Vertical stems from Kraken bottom */}
-          <line x1="160" y1="275" x2="160" y2="395" stroke={C.line} strokeWidth="2.5" />
-          <line x1="200" y1="275" x2="200" y2="395" stroke={C.line} strokeWidth="2.5" />
-          {/* Down arrow: Kraken → Wallet (outer left) */}
-          <line x1="160" y1="395" x2="395" y2="525" stroke={C.line} strokeWidth="2.5" markerEnd="url(#arrow)" />
-          {/* Up arrow: Wallet → Kraken (inner right) */}
-          <line x1="445" y1="525" x2="200" y2="395" stroke={C.line} strokeWidth="2.5" markerEnd="url(#arrow)" />
-          {/* Down-arrow label sits ABOVE-LEFT of the down-arrow's mid */}
-          <text x="115" y="418" fontFamily={FONT_BODY} fontSize="16" fontWeight="700" fill={C.text}>
-            ↓ tokens
-          </text>
-          {/* Up-arrow label sits BELOW the up-arrow's start (near wallet) */}
-          <text x="425" y="510" textAnchor="start" fontFamily={FONT_BODY} fontSize="16" fontWeight="700" fill={C.text}>
-            ↑ BTC / $USD
-          </text>
-        </g>
-
-        {/* DotSwap ↔ Wallet (right arrow pair) — mirror */}
-        <g>
-          <line x1="840" y1="275" x2="840" y2="395" stroke={C.line} strokeWidth="2.5" />
-          <line x1="800" y1="275" x2="800" y2="395" stroke={C.line} strokeWidth="2.5" />
-          <line x1="840" y1="395" x2="605" y2="525" stroke={C.line} strokeWidth="2.5" markerEnd="url(#arrow)" />
-          <line x1="555" y1="525" x2="800" y2="395" stroke={C.line} strokeWidth="2.5" markerEnd="url(#arrow)" />
-          <text x="885" y="418" textAnchor="end" fontFamily={FONT_BODY} fontSize="16" fontWeight="700" fill={C.text}>
-            ↓ tokens
-          </text>
-          <text x="575" y="510" textAnchor="end" fontFamily={FONT_BODY} fontSize="16" fontWeight="700" fill={C.text}>
-            ↑ BTC
-          </text>
-        </g>
-
-        {/* ============================================================ */}
-        {/* Wallet (bottom anchor)                                        */}
-        {/* ============================================================ */}
-        <g>
-          <rect x="380" y="525" width="240" height="120" rx="14" ry="14" fill="#fff" stroke={C.line} strokeWidth="3" />
-          <rect x="380" y="525" width="240" height="36" rx="14" ry="14" fill={venueColor.wallet} stroke={C.line} strokeWidth="3" />
-          <text x="500" y="551" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="22" fontWeight="700" fill="#fff">
-            Wallet
-          </text>
-          <text x="500" y="585" textAnchor="middle" fontFamily={FONT_BODY} fontSize="14" fill={C.subtle}>
-            BIP-86 Taproot · hot
-          </text>
-          {/* Burn reserve sub-block */}
-          <rect x="400" y="595" width="200" height="40" rx="8" ry="8" fill={`${C.reserve}40`} stroke={C.reserve} strokeWidth="2" />
-          <text x="500" y="611" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="13" fontWeight="700" fill={C.text}>
-            burn reserve
-          </text>
-          <text x="500" y="627" textAnchor="middle" fontFamily={FONT_BODY} fontSize="13" fill={C.text}>
-            net BTC captured
-          </text>
-        </g>
-
-        {/* ============================================================ */}
-        {/* STEP 4 — Settle. Positioned to the RIGHT of the wallet block, */}
-        {/* directly annotating the wallet (where settlement lands).      */}
-        {/* ============================================================ */}
-        <g>
-          <circle cx="700" cy="555" r="18" fill={badge('4')} stroke={C.line} strokeWidth="2.5" />
-          <text x="700" y="562" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="20" fontWeight="700" fill={C.text}>
-            4
-          </text>
-          <text x="730" y="555" fontFamily={FONT_TITLE} fontSize="16" fontWeight="700" fill={C.text}>
-            settle on Bitcoin
-          </text>
-          <text x="730" y="576" fontFamily={FONT_BODY} fontSize="14" fontWeight="700" fill={C.text}>
-            Kraken &lt; 1s
-          </text>
-          <text x="730" y="594" fontFamily={FONT_BODY} fontSize="14" fontWeight="700" fill={C.text}>
-            L1 next block
-          </text>
-        </g>
-
-        {/* ============================================================ */}
-        {/* STEP 5 — Burn (below wallet, connected to the reserve)        */}
-        {/* ============================================================ */}
-        <g>
-          {/* connector from reserve to burn block, with the trigger
-              condition labeled to the right of the line with enough
-              gap to not touch the arrowhead */}
-          <line x1="500" y1="645" x2="500" y2="685" stroke={C.line} strokeWidth="2.5" strokeDasharray="6 4" markerEnd="url(#arrow)" />
-          <text x="540" y="669" fontFamily={FONT_BODY} fontSize="16" fontWeight="700" fill={C.text}>
-            at threshold
-          </text>
-
-          {/* burn block. Title bar + body block.
-              Step badge sits at the top-left of the title bar. */}
-          <rect x="190" y="685" width="620" height="60" rx="12" ry="12" fill="#fff" stroke={C.burn} strokeWidth="3" />
-          <rect x="190" y="685" width="620" height="32" rx="12" ry="12" fill={C.burn} stroke={C.line} strokeWidth="3" />
-          <circle cx="225" cy="701" r="16" fill={badge('5')} stroke={C.line} strokeWidth="2.5" />
-          <text x="225" y="707" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="18" fontWeight="700" fill="#fff">
-            5
-          </text>
-          <text x="540" y="708" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="16" fontWeight="700" fill="#fff">
-            🔥 swap BTC → fresh $MIM → burn via runestone
-          </text>
-          <text x="500" y="735" textAnchor="middle" fontFamily={FONT_BODY} fontSize="13" fill={C.text}>
-            edict targets the runestone&apos;s OP_RETURN · every $MIM holder benefits
-          </text>
-        </g>
-      </svg>
-
-      {/* Compact body-text strip below the diagram. Restates the
-          per-step bodies — the diagram has titles only, this strip
-          has the descriptive copy for anyone who wants more detail. */}
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-5 gap-3">
-        {steps.map((s) => (
+      {/* ─── Band 2 — steps 1-4 as a 2×2 grid ─── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {tradeSteps.map((s, i) => (
           <div
             key={s.n}
-            className="flex items-start gap-2 border-t-2 border-wizard-black/20 sm:border-t-0 sm:border-l-2 sm:border-wizard-black/20 first:border-l-0 pt-3 sm:pt-0 sm:px-3"
+            className={`bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-5 ${
+              i % 2 === 0 ? '-rotate-[0.3deg]' : 'rotate-[0.3deg]'
+            } hover:rotate-0 transition-all`}
           >
-            <div
-              className={`flex-none w-7 h-7 bg-${s.color} border-2 border-wizard-black rounded-full text-center font-derp text-base leading-6 shadow-[1px_1px_0_#040104]`}
-            >
-              {s.n}
+            <div className="flex items-center gap-3 mb-2">
+              <div
+                className={`flex-none w-10 h-10 bg-${s.color} border-2 border-wizard-black rounded-full text-center font-derp text-2xl leading-9 shadow-[2px_2px_0_#040104]`}
+              >
+                {s.n}
+              </div>
+              <h3 className="font-derp text-xl md:text-2xl text-wizard-black">
+                {s.title}
+              </h3>
             </div>
-            <p className="font-caveat text-sm text-wizard-text leading-snug">
+            <p className="font-caveat text-base md:text-lg text-wizard-text leading-snug">
               {s.body}
             </p>
           </div>
         ))}
       </div>
+
+      {/* ─── Band 3 — burn step, full width, visually distinct ─── */}
+      {burnStep && (
+        <div className="bg-white border-3 border-glitch-magenta rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-5 -rotate-[0.2deg]">
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className={`flex-none w-12 h-12 bg-glitch-magenta border-2 border-wizard-black rounded-full text-center font-derp text-3xl leading-[44px] shadow-[2px_2px_0_#040104] text-white`}
+            >
+              {burnStep.n}
+            </div>
+            <h3 className="font-derp text-2xl md:text-3xl text-wizard-black">
+              {burnStep.title}
+            </h3>
+          </div>
+          <p className="font-caveat text-base md:text-xl text-wizard-text leading-snug">
+            {burnStep.body}
+          </p>
+          <p className="mt-3 font-derp text-base md:text-lg text-glitch-magenta">
+            captured BTC → burned $MIM
+          </p>
+        </div>
+      )}
     </div>
+  );
+}
+
+/**
+ * Small topology SVG: just shows Kraken ⇄ DotSwap so viewers see "two
+ * venues, bidirectional flow" at a glance. Intentionally minimal —
+ * everything text-heavy goes in the HTML cards below.
+ */
+function VenueTopologySvg() {
+  return (
+    <svg
+      viewBox="0 0 600 120"
+      className="block mx-auto w-full max-w-2xl h-auto"
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      aria-label="Kraken and DotSwap, the two venues the wizard watches"
+    >
+      <defs>
+        <marker
+          id="topo-arrow"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="7"
+          markerHeight="7"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#040104" />
+        </marker>
+      </defs>
+
+      {/* Kraken (left) */}
+      <rect
+        x="40"
+        y="30"
+        width="180"
+        height="60"
+        rx="14"
+        ry="14"
+        fill="#f09f00"
+        stroke="#040104"
+        strokeWidth="3"
+      />
+      <text
+        x="130"
+        y="69"
+        textAnchor="middle"
+        fontFamily="'Derp', 'Permanent Marker', cursive"
+        fontSize="26"
+        fontWeight="700"
+        fill="#040104"
+      >
+        Kraken
+      </text>
+
+      {/* DotSwap (right) */}
+      <rect
+        x="380"
+        y="30"
+        width="180"
+        height="60"
+        rx="14"
+        ry="14"
+        fill="#2f53fe"
+        stroke="#040104"
+        strokeWidth="3"
+      />
+      <text
+        x="470"
+        y="69"
+        textAnchor="middle"
+        fontFamily="'Derp', 'Permanent Marker', cursive"
+        fontSize="26"
+        fontWeight="700"
+        fill="#ffffff"
+      >
+        DotSwap
+      </text>
+
+      {/* Bidirectional arrows in the middle */}
+      <line
+        x1="240"
+        y1="50"
+        x2="360"
+        y2="50"
+        stroke="#040104"
+        strokeWidth="2.5"
+        markerEnd="url(#topo-arrow)"
+      />
+      <line
+        x1="360"
+        y1="70"
+        x2="240"
+        y2="70"
+        stroke="#040104"
+        strokeWidth="2.5"
+        markerEnd="url(#topo-arrow)"
+      />
+    </svg>
   );
 }
 
