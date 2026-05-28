@@ -231,9 +231,8 @@ function SpreadConvergencePanel({
         Spread Convergence
       </div>
       <p className="font-caveat text-base text-wizard-text mb-4">
-        The bridge's job is to make these two venues agree on price. Smaller
-        numbers mean tighter spreads — better for everyone trading these
-        runes.
+        The wizard&apos;s job is to make these two venues agree on price.
+        Smaller numbers mean tighter spreads.
       </p>
       <div className="grid sm:grid-cols-2 gap-4">
         {tokens.map((tok) => {
@@ -1113,9 +1112,8 @@ function BtcPnlSection({ state }: { state: DashboardState }) {
           ₿ The Honest Scoreboard
         </h2>
         <p className="text-center font-caveat text-lg text-wizard-text mb-8 max-w-2xl mx-auto">
-          The bridge&apos;s lifetime BTC P&amp;L. Operator portfolio is
-          denominated in BTC + tokens; a USD score would just measure BTC
-          drift. This is what the bridge has actually captured.
+          The wizard&apos;s lifetime BTC P&amp;L. Portfolio is denominated in
+          BTC + tokens; a USD score just measures BTC drift.
         </p>
         <div className="bg-white border-3 border-wizard-black rounded-[18px_5px_18px_5px] shadow-[4px_4px_0_#040104] p-6">
           <div className="text-center mb-6">
@@ -1134,8 +1132,8 @@ function BtcPnlSection({ state }: { state: DashboardState }) {
             </div>
             <div className="font-caveat text-sm text-wizard-beard mt-2">
               {isPositive
-                ? 'the bridge is net-capturing BTC'
-                : 'the bridge is net-bleeding BTC (fees + outflows exceed inflows so far)'}
+                ? 'the wizard is net-capturing BTC'
+                : 'the wizard is net-bleeding BTC (fees + outflows exceed inflows so far)'}
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
