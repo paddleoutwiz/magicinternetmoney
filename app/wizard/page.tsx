@@ -1491,6 +1491,12 @@ function HowItWorksDiagram({
   const badge = (n: string): string =>
     ({ '1': C.kraken, '2': C.dotswap, '3': C.reserve, '4': '#fce300', '5': C.burn }[n] ?? '#999');
 
+  // Font families must match the @font-face / Google Fonts names exactly.
+  // SVG text doesn't pick up Tailwind utility classes; we have to spell
+  // out the family. Case matters: 'Derp' / 'Caveat', not lowercase.
+  const FONT_TITLE = "'Derp', 'Permanent Marker', cursive";
+  const FONT_BODY = "'Caveat', cursive";
+
   const venueColor = {
     kraken: C.kraken,
     wallet: C.wallet,
@@ -1540,7 +1546,7 @@ function HowItWorksDiagram({
             x="500"
             y="60"
             textAnchor="middle"
-            fontFamily="derp, monospace"
+            fontFamily={FONT_TITLE}
             fontSize="28"
             fontWeight="700"
             fill={C.text}
@@ -1551,7 +1557,7 @@ function HowItWorksDiagram({
             x="500"
             y="20"
             textAnchor="middle"
-            fontFamily="derp, monospace"
+            fontFamily={FONT_TITLE}
             fontSize="16"
             fontWeight="700"
             fill={C.text}
@@ -1567,16 +1573,16 @@ function HowItWorksDiagram({
         <g>
           <rect x="60" y="115" width="240" height="160" rx="14" ry="14" fill="#fff" stroke={C.line} strokeWidth="3" />
           <rect x="60" y="115" width="240" height="42" rx="14" ry="14" fill={venueColor.kraken} stroke={C.line} strokeWidth="3" />
-          <text x="180" y="145" textAnchor="middle" fontFamily="derp, monospace" fontSize="26" fontWeight="700" fill={C.text}>
+          <text x="180" y="145" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="26" fontWeight="700" fill={C.text}>
             Kraken
           </text>
-          <text x="180" y="190" textAnchor="middle" fontFamily="caveat, cursive" fontSize="18" fill={C.text}>
+          <text x="180" y="190" textAnchor="middle" fontFamily={FONT_BODY} fontSize="18" fill={C.text}>
             CEX · order book
           </text>
-          <text x="180" y="218" textAnchor="middle" fontFamily="caveat, cursive" fontSize="20" fill={C.text}>
+          <text x="180" y="218" textAnchor="middle" fontFamily={FONT_BODY} fontSize="20" fill={C.text}>
             $USD · $MIM · $DOG
           </text>
-          <text x="180" y="252" textAnchor="middle" fontFamily="caveat, cursive" fontSize="14" fill={C.subtle}>
+          <text x="180" y="252" textAnchor="middle" fontFamily={FONT_BODY} fontSize="14" fill={C.subtle}>
             via Kraken CLI
           </text>
         </g>
@@ -1585,16 +1591,16 @@ function HowItWorksDiagram({
         <g>
           <rect x="700" y="115" width="240" height="160" rx="14" ry="14" fill="#fff" stroke={C.line} strokeWidth="3" />
           <rect x="700" y="115" width="240" height="42" rx="14" ry="14" fill={venueColor.dotswap} stroke={C.line} strokeWidth="3" />
-          <text x="820" y="145" textAnchor="middle" fontFamily="derp, monospace" fontSize="26" fontWeight="700" fill="#fff">
+          <text x="820" y="145" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="26" fontWeight="700" fill="#fff">
             DotSwap
           </text>
-          <text x="820" y="190" textAnchor="middle" fontFamily="caveat, cursive" fontSize="18" fill={C.text}>
+          <text x="820" y="190" textAnchor="middle" fontFamily={FONT_BODY} fontSize="18" fill={C.text}>
             L1 AMM · runes
           </text>
-          <text x="820" y="218" textAnchor="middle" fontFamily="caveat, cursive" fontSize="20" fill={C.text}>
+          <text x="820" y="218" textAnchor="middle" fontFamily={FONT_BODY} fontSize="20" fill={C.text}>
             BTC ↔ $MIM ↔ $DOG
           </text>
-          <text x="820" y="252" textAnchor="middle" fontFamily="caveat, cursive" fontSize="14" fill={C.subtle}>
+          <text x="820" y="252" textAnchor="middle" fontFamily={FONT_BODY} fontSize="14" fill={C.subtle}>
             on Bitcoin L1
           </text>
         </g>
@@ -1605,16 +1611,16 @@ function HowItWorksDiagram({
         <g>
           <rect x="370" y="155" width="260" height="80" rx="12" ry="12" fill="#fff" stroke={C.dotswap} strokeWidth="2.5" strokeDasharray="6 4" />
           <circle cx="395" cy="183" r="18" fill={badge('2')} stroke={C.line} strokeWidth="2.5" />
-          <text x="395" y="190" textAnchor="middle" fontFamily="derp, monospace" fontSize="20" fontWeight="700" fill={C.text}>
+          <text x="395" y="190" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="20" fontWeight="700" fill={C.text}>
             2
           </text>
-          <text x="500" y="180" textAnchor="middle" fontFamily="derp, monospace" fontSize="15" fontWeight="700" fill={C.text}>
+          <text x="500" y="180" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="15" fontWeight="700" fill={C.text}>
             measure the gap
           </text>
-          <text x="500" y="202" textAnchor="middle" fontFamily="caveat, cursive" fontSize="14" fill={C.subtle}>
+          <text x="500" y="202" textAnchor="middle" fontFamily={FONT_BODY} fontSize="14" fill={C.subtle}>
             spread vs round-trip fees
           </text>
-          <text x="500" y="222" textAnchor="middle" fontFamily="caveat, cursive" fontSize="13" fill={C.subtle}>
+          <text x="500" y="222" textAnchor="middle" fontFamily={FONT_BODY} fontSize="13" fill={C.subtle}>
             (decision; nothing has moved yet)
           </text>
         </g>
@@ -1627,13 +1633,13 @@ function HowItWorksDiagram({
         {/* ============================================================ */}
         <g>
           <circle cx="500" cy="320" r="22" fill={badge('3')} stroke={C.line} strokeWidth="3" />
-          <text x="500" y="328" textAnchor="middle" fontFamily="derp, monospace" fontSize="22" fontWeight="700" fill={C.text}>
+          <text x="500" y="328" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="22" fontWeight="700" fill={C.text}>
             3
           </text>
-          <text x="500" y="365" textAnchor="middle" fontFamily="derp, monospace" fontSize="15" fontWeight="700" fill={C.text}>
+          <text x="500" y="365" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="15" fontWeight="700" fill={C.text}>
             fire both legs at once
           </text>
-          <text x="500" y="383" textAnchor="middle" fontFamily="caveat, cursive" fontSize="13" fill={C.subtle}>
+          <text x="500" y="383" textAnchor="middle" fontFamily={FONT_BODY} fontSize="13" fill={C.subtle}>
             Kraken IOC + DotSwap PSBT, broadcast in parallel
           </text>
         </g>
@@ -1644,10 +1650,11 @@ function HowItWorksDiagram({
         {/* ============================================================ */}
 
         {/* Kraken ↔ Wallet (left arrow pair).
-            Arrows start at the Kraken bottom edge (y=275) via short
-            vertical stems, then go diagonally to the wallet top edge
-            (y=525). Labels sit on the white space between the two
-            arrows (which form a narrow vee shape). */}
+            Down arrow (Kraken → Wallet) carries tokens; labeled NEAR THE
+            TOP next to its origin. Up arrow (Wallet → Kraken) carries
+            BTC/$USD; labeled NEAR THE BOTTOM next to its origin.
+            This spreads the labels vertically so they don't pile up in
+            the middle and don't fight the wallet block. */}
         <g>
           {/* Vertical stems from Kraken bottom */}
           <line x1="160" y1="275" x2="160" y2="395" stroke={C.line} strokeWidth="2.5" />
@@ -1656,27 +1663,26 @@ function HowItWorksDiagram({
           <line x1="160" y1="395" x2="395" y2="525" stroke={C.line} strokeWidth="2.5" markerEnd="url(#arrow)" />
           {/* Up arrow: Wallet → Kraken (inner right) */}
           <line x1="445" y1="525" x2="200" y2="395" stroke={C.line} strokeWidth="2.5" markerEnd="url(#arrow)" />
-          {/* Labels: ↓ outside (left of down-arrow), ↑ inside (right of up-arrow).
-              At y=460 the down-arrow x is approximately 222, the up-arrow x
-              approximately 384. Plenty of room either side. */}
-          <text x="180" y="463" textAnchor="end" fontFamily="caveat, cursive" fontSize="14" fill={C.text}>
+          {/* Down-arrow label sits ABOVE-LEFT of the down-arrow's mid */}
+          <text x="115" y="418" fontFamily={FONT_BODY} fontSize="16" fontWeight="700" fill={C.text}>
             ↓ tokens
           </text>
-          <text x="425" y="463" textAnchor="start" fontFamily="caveat, cursive" fontSize="14" fill={C.text}>
+          {/* Up-arrow label sits BELOW the up-arrow's start (near wallet) */}
+          <text x="425" y="510" textAnchor="start" fontFamily={FONT_BODY} fontSize="16" fontWeight="700" fill={C.text}>
             ↑ BTC / $USD
           </text>
         </g>
 
-        {/* DotSwap ↔ Wallet (right arrow pair) — mirror of the left side */}
+        {/* DotSwap ↔ Wallet (right arrow pair) — mirror */}
         <g>
           <line x1="840" y1="275" x2="840" y2="395" stroke={C.line} strokeWidth="2.5" />
           <line x1="800" y1="275" x2="800" y2="395" stroke={C.line} strokeWidth="2.5" />
           <line x1="840" y1="395" x2="605" y2="525" stroke={C.line} strokeWidth="2.5" markerEnd="url(#arrow)" />
           <line x1="555" y1="525" x2="800" y2="395" stroke={C.line} strokeWidth="2.5" markerEnd="url(#arrow)" />
-          <text x="820" y="463" textAnchor="start" fontFamily="caveat, cursive" fontSize="14" fill={C.text}>
+          <text x="885" y="418" textAnchor="end" fontFamily={FONT_BODY} fontSize="16" fontWeight="700" fill={C.text}>
             ↓ tokens
           </text>
-          <text x="575" y="463" textAnchor="end" fontFamily="caveat, cursive" fontSize="14" fill={C.text}>
+          <text x="575" y="510" textAnchor="end" fontFamily={FONT_BODY} fontSize="16" fontWeight="700" fill={C.text}>
             ↑ BTC
           </text>
         </g>
@@ -1687,38 +1693,38 @@ function HowItWorksDiagram({
         <g>
           <rect x="380" y="525" width="240" height="120" rx="14" ry="14" fill="#fff" stroke={C.line} strokeWidth="3" />
           <rect x="380" y="525" width="240" height="36" rx="14" ry="14" fill={venueColor.wallet} stroke={C.line} strokeWidth="3" />
-          <text x="500" y="551" textAnchor="middle" fontFamily="derp, monospace" fontSize="22" fontWeight="700" fill="#fff">
+          <text x="500" y="551" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="22" fontWeight="700" fill="#fff">
             Wallet
           </text>
-          <text x="500" y="585" textAnchor="middle" fontFamily="caveat, cursive" fontSize="14" fill={C.subtle}>
+          <text x="500" y="585" textAnchor="middle" fontFamily={FONT_BODY} fontSize="14" fill={C.subtle}>
             BIP-86 Taproot · hot
           </text>
           {/* Burn reserve sub-block */}
           <rect x="400" y="595" width="200" height="40" rx="8" ry="8" fill={`${C.reserve}40`} stroke={C.reserve} strokeWidth="2" />
-          <text x="500" y="611" textAnchor="middle" fontFamily="derp, monospace" fontSize="13" fontWeight="700" fill={C.text}>
+          <text x="500" y="611" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="13" fontWeight="700" fill={C.text}>
             burn reserve
           </text>
-          <text x="500" y="627" textAnchor="middle" fontFamily="caveat, cursive" fontSize="13" fill={C.text}>
+          <text x="500" y="627" textAnchor="middle" fontFamily={FONT_BODY} fontSize="13" fill={C.text}>
             net BTC captured
           </text>
         </g>
 
         {/* ============================================================ */}
-        {/* STEP 4 — Settle. Positioned to the LEFT of the wallet block,  */}
-        {/* visually labeling what happens as the arrows land.            */}
+        {/* STEP 4 — Settle. Positioned to the RIGHT of the wallet block, */}
+        {/* directly annotating the wallet (where settlement lands).      */}
         {/* ============================================================ */}
         <g>
-          <circle cx="75" cy="555" r="18" fill={badge('4')} stroke={C.line} strokeWidth="2.5" />
-          <text x="75" y="562" textAnchor="middle" fontFamily="derp, monospace" fontSize="20" fontWeight="700" fill={C.text}>
+          <circle cx="700" cy="555" r="18" fill={badge('4')} stroke={C.line} strokeWidth="2.5" />
+          <text x="700" y="562" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="20" fontWeight="700" fill={C.text}>
             4
           </text>
-          <text x="75" y="600" textAnchor="middle" fontFamily="derp, monospace" fontSize="14" fontWeight="700" fill={C.text}>
-            settle
+          <text x="730" y="555" fontFamily={FONT_TITLE} fontSize="16" fontWeight="700" fill={C.text}>
+            settle on Bitcoin
           </text>
-          <text x="75" y="618" textAnchor="middle" fontFamily="caveat, cursive" fontSize="12" fill={C.subtle}>
-            Kraken &lt;1s
+          <text x="730" y="576" fontFamily={FONT_BODY} fontSize="14" fontWeight="700" fill={C.text}>
+            Kraken &lt; 1s
           </text>
-          <text x="75" y="632" textAnchor="middle" fontFamily="caveat, cursive" fontSize="12" fill={C.subtle}>
+          <text x="730" y="594" fontFamily={FONT_BODY} fontSize="14" fontWeight="700" fill={C.text}>
             L1 next block
           </text>
         </g>
@@ -1728,9 +1734,10 @@ function HowItWorksDiagram({
         {/* ============================================================ */}
         <g>
           {/* connector from reserve to burn block, with the trigger
-              condition labeled to the right of the line */}
+              condition labeled to the right of the line with enough
+              gap to not touch the arrowhead */}
           <line x1="500" y1="645" x2="500" y2="685" stroke={C.line} strokeWidth="2.5" strokeDasharray="6 4" markerEnd="url(#arrow)" />
-          <text x="510" y="671" fontFamily="caveat, cursive" fontSize="13" fill={C.subtle}>
+          <text x="540" y="669" fontFamily={FONT_BODY} fontSize="16" fontWeight="700" fill={C.text}>
             at threshold
           </text>
 
@@ -1739,32 +1746,35 @@ function HowItWorksDiagram({
           <rect x="190" y="685" width="620" height="60" rx="12" ry="12" fill="#fff" stroke={C.burn} strokeWidth="3" />
           <rect x="190" y="685" width="620" height="32" rx="12" ry="12" fill={C.burn} stroke={C.line} strokeWidth="3" />
           <circle cx="225" cy="701" r="16" fill={badge('5')} stroke={C.line} strokeWidth="2.5" />
-          <text x="225" y="707" textAnchor="middle" fontFamily="derp, monospace" fontSize="18" fontWeight="700" fill="#fff">
+          <text x="225" y="707" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="18" fontWeight="700" fill="#fff">
             5
           </text>
-          <text x="540" y="708" textAnchor="middle" fontFamily="derp, monospace" fontSize="16" fontWeight="700" fill="#fff">
+          <text x="540" y="708" textAnchor="middle" fontFamily={FONT_TITLE} fontSize="16" fontWeight="700" fill="#fff">
             🔥 swap BTC → fresh $MIM → burn via runestone
           </text>
-          <text x="500" y="735" textAnchor="middle" fontFamily="caveat, cursive" fontSize="13" fill={C.text}>
+          <text x="500" y="735" textAnchor="middle" fontFamily={FONT_BODY} fontSize="13" fill={C.text}>
             edict targets the runestone&apos;s OP_RETURN · every $MIM holder benefits
           </text>
         </g>
       </svg>
 
-      {/* Compact body-text strip below the diagram. Only the per-step
-          'body' copy from the steps array; titles are already on the
-          diagram. Kept compact so it's an at-a-glance footnote, not a
-          re-explanation. */}
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-5 gap-2 text-center">
+      {/* Compact body-text strip below the diagram. Restates the
+          per-step bodies — the diagram has titles only, this strip
+          has the descriptive copy for anyone who wants more detail. */}
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-5 gap-3">
         {steps.map((s) => (
           <div
             key={s.n}
-            className="font-caveat text-xs text-wizard-beard border-t-2 border-wizard-black/20 sm:border-t-0 sm:border-l-2 sm:border-wizard-black/20 first:border-l-0 pt-2 sm:pt-0 sm:px-2 leading-snug"
+            className="flex items-start gap-2 border-t-2 border-wizard-black/20 sm:border-t-0 sm:border-l-2 sm:border-wizard-black/20 first:border-l-0 pt-3 sm:pt-0 sm:px-3"
           >
-            <span className="font-derp text-sm text-wizard-black">
-              {s.n}.
-            </span>{' '}
-            {s.body}
+            <div
+              className={`flex-none w-7 h-7 bg-${s.color} border-2 border-wizard-black rounded-full text-center font-derp text-base leading-6 shadow-[1px_1px_0_#040104]`}
+            >
+              {s.n}
+            </div>
+            <p className="font-caveat text-sm text-wizard-text leading-snug">
+              {s.body}
+            </p>
           </div>
         ))}
       </div>
