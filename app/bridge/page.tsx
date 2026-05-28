@@ -64,28 +64,21 @@ function BridgeHero({ state }: { state: DashboardState }) {
 
         {/* Title */}
         <h1 className="text-5xl md:text-7xl font-derp text-wizard-black leading-tight">
-          <span className="inline-block -rotate-2">Magic</span>{' '}
+          <span className="inline-block -rotate-2">The</span>{' '}
           <span className="inline-block rotate-1 text-bitcoin-orange drop-shadow-[2px_2px_0_#040104]">
-            Internet
-          </span>{' '}
-          <span className="inline-block -rotate-1">Money</span>
+            Wizard
+          </span>
         </h1>
-        <h2 className="mt-2 text-3xl md:text-5xl font-derp text-wizard-blue drop-shadow-[2px_2px_0_#040104] rotate-1">
-          ✨ Runes Bridge ✨
+        <h2 className="mt-2 text-2xl md:text-3xl font-derp text-wizard-blue drop-shadow-[2px_2px_0_#040104] rotate-1">
+          ✨ a Magic Internet Money creation ✨
         </h2>
 
         {/* Subtitle */}
-        <p className="mt-8 text-xl md:text-2xl font-caveat text-wizard-text max-w-3xl mx-auto leading-snug">
-          An <strong>autonomous wizard</strong> bridging <strong>$MIM</strong>{' '}
-          and <strong>$DOG</strong> liquidity between{' '}
-          <span className="text-bitcoin-orange font-bold">Kraken</span> and{' '}
-          <span className="text-wizard-blue font-bold">DotSwap</span>. When the
-          two venues disagree on price, the wizard{' '}
-          <em className="text-wizard-highlight">casts a spell</em> to tighten
-          the spread. Every captured spread becomes{' '}
-          <strong className="text-glitch-magenta">burned $MIM</strong> — making
-          every existing $MIM holder slightly richer in proportion.{' '}
-          <strong>Real Bitcoin. Real burns. On chain.</strong>
+        <p className="mt-8 text-xl md:text-2xl font-caveat text-wizard-text max-w-2xl mx-auto leading-snug">
+          Autonomous market-keeper for{' '}
+          <strong>$MIM</strong> and <strong>$DOG</strong>. Captures
+          cross-venue spread, turns it into{' '}
+          <strong className="text-glitch-magenta">burned $MIM</strong>. On chain.
         </p>
 
         {/* Headline numbers — these measure ecosystem service, not operator P&L. */}
@@ -577,10 +570,8 @@ function MarketsSection({ state }: { state: DashboardState }) {
         <h2 className="text-4xl md:text-6xl font-derp text-wizard-black text-center mb-2 rotate-1">
           Markets at a Glance
         </h2>
-        <p className="text-center font-caveat text-xl text-wizard-text mb-12 max-w-3xl mx-auto">
-          24h trading activity across venues, and how much of it the wizard
-          contributed. The bridge is one participant in a bigger ecosystem —
-          but a measurable one.
+        <p className="text-center font-caveat text-xl text-wizard-text mb-12">
+          24h volume by venue. The wizard&apos;s contribution, in real numbers.
         </p>
         <div className="grid md:grid-cols-2 gap-6">
           {markets.map((m) => (
@@ -715,8 +706,7 @@ function TreasurySection({ state }: { state: DashboardState }) {
           The Wizard's Vault
         </h2>
         <p className="text-center font-caveat text-xl text-wizard-text mb-12">
-          Real capital deployed across both venues. Read it on chain. The
-          interesting bit isn't the size — it's how much has moved.
+          Working capital. The interesting bit is how much has moved.
         </p>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -867,8 +857,7 @@ function FiresSection({ state }: { state: DashboardState }) {
             Cycles Closed
           </h2>
           <p className="font-caveat text-xl text-wizard-text">
-            No cycles yet. The wizard is waiting for the cross-venue spread to
-            cross the convergence threshold.
+            No cycles yet. The wizard is watching the spread.
           </p>
         </div>
       </section>
@@ -882,10 +871,7 @@ function FiresSection({ state }: { state: DashboardState }) {
           Cycles Closed
         </h2>
         <p className="text-center font-caveat text-xl text-wizard-text mb-8">
-          Every cross-venue cycle the wizard has executed. Each one moved real
-          tokens, paid real fees, and tightened the spread a little. Click a
-          row for details, or click the transaction id to verify on
-          mempool.space.
+          Every cycle the wizard has run. Verifiable on chain.
         </p>
 
         {/* Table header (desktop only) */}
@@ -1396,12 +1382,8 @@ function BurnsSection({ state }: { state: DashboardState }) {
         <h2 className="text-4xl md:text-6xl font-derp text-wizard-black text-center mb-2 rotate-1">
           🔥 $MIM Burned
         </h2>
-        <p className="text-center font-caveat text-xl text-wizard-text mb-2 max-w-3xl mx-auto">
-          BTC captured from cross-venue spreads is used to{' '}
-          <strong>buy fresh $MIM on DotSwap and then burn it</strong>{' '}
-          via the Runes protocol&apos;s native destruction mechanism.
-          Captured BTC in → burned $MIM out. Every existing $MIM holder
-          benefits in proportion to their holdings.
+        <p className="text-center font-caveat text-xl text-wizard-text mb-2 max-w-xl mx-auto">
+          Captured BTC → burned $MIM. Every holder benefits in proportion.
         </p>
         {totalBurned > 0 ? (
           <p className="text-center font-derp text-3xl md:text-4xl text-glitch-magenta mt-6 mb-4">
@@ -1453,11 +1435,8 @@ function BurnsSection({ state }: { state: DashboardState }) {
           ))}
         </div>
 
-        <p className="mt-8 text-center font-caveat text-base text-wizard-beard max-w-2xl mx-auto">
-          Burns are completely transparent and verifiable on chain. Click any
-          row to see the transaction on mempool.space. The runes are
-          destroyed by an edict targeting the runestone&apos;s OP_RETURN
-          output — every runes-aware indexer recognizes this as a burn.
+        <p className="mt-8 text-center font-caveat text-base text-wizard-beard">
+          Click any row to verify on mempool.space.
         </p>
       </div>
     </section>
@@ -1470,32 +1449,32 @@ function HowItWorksSection() {
   const steps = [
     {
       n: '1',
-      title: 'Watch both venues',
-      body: 'The wizard polls Kraken and DotSwap every 30 seconds. It compares the live bid/ask on Kraken against the AMM mid-price on DotSwap, then walks the Kraken order book to compute the *honest* executable price for the size it wants to trade.',
+      title: 'Watch',
+      body: 'Poll Kraken + DotSwap every 30s. Walk the order book for an honest executable price.',
       color: 'bitcoin-orange',
     },
     {
       n: '2',
-      title: 'Measure the gap',
-      body: "Compute the round-trip break-even (DotSwap pool fee + Kraken taker + slippage + L1 fee). If the live gross spread clears it, the wizard prepares both legs. The goal isn't operator profit — it's tightening the spread.",
+      title: 'Measure',
+      body: 'Compute round-trip break-even (pool fee + taker + slippage + L1). Fire only if spread clears it.',
       color: 'wizard-blue',
     },
     {
       n: '3',
-      title: 'Cast both legs at once',
-      body: 'Kraken side: a real IOC limit order via the Kraken CLI. DotSwap side: build a PSBT, sign it with the in-process hot signer (BIP-86 Taproot, your warm wallet), broadcast to Bitcoin L1.',
+      title: 'Fire both legs',
+      body: 'Kraken IOC limit order + DotSwap signed PSBT, broadcast at once. BIP-86 Taproot signer with hot guardrails.',
       color: 'wizard-highlight',
     },
     {
       n: '4',
-      title: 'Settle on Bitcoin',
-      body: "The Kraken leg fills in under a second. The L1 leg confirms in the next block or two. The wizard's L1 watcher advances the leg state when the transaction lands and updates the inventory snapshot.",
+      title: 'Settle',
+      body: 'Kraken fills in under a second. L1 confirms in a block or two. Inventory auto-updates.',
       color: 'magic-yellow',
     },
     {
       n: '5',
-      title: 'Swap, then burn 🔥',
-      body: "BTC captured from spreads accumulates in a reserve. When the reserve crosses the threshold, the wizard buys fresh $MIM on DotSwap with that BTC and immediately burns it via the Runes protocol's native destruction (edict targets the runestone's OP_RETURN — every runes-aware indexer recognizes it as a burn). Captured BTC → burned $MIM. Conservation holds.",
+      title: 'Burn 🔥',
+      body: 'Net BTC captured accumulates in a reserve. At threshold: swap to fresh $MIM, then burn via protocol-native runestone edict.',
       color: 'glitch-magenta',
     },
   ];
@@ -1506,9 +1485,8 @@ function HowItWorksSection() {
         <h2 className="text-4xl md:text-6xl font-derp text-wizard-black text-center mb-2 rotate-1">
           How the Magic Works
         </h2>
-        <p className="text-center font-caveat text-xl text-wizard-text mb-12 max-w-2xl mx-auto">
-          A peek inside the spellbook. Built with Kraken CLI for the Agent Zero
-          promotion.
+        <p className="text-center font-caveat text-xl text-wizard-text mb-12">
+          A peek inside the spellbook.
         </p>
 
         {/*
@@ -1552,14 +1530,11 @@ function HowItWorksSection() {
         </div>
 
         {/* Note about non-pooled */}
-        <div className="mt-12 max-w-3xl mx-auto bg-magic-yellow/40 border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-5 text-center">
+        <div className="mt-12 max-w-2xl mx-auto bg-magic-yellow/40 border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-4 text-center">
           <p className="font-caveat text-lg text-wizard-text">
-            <strong>Important:</strong> right now this wizard trades only its
-            own capital. There's no pooled fund and no way for others to
-            contribute. The whole thing is{' '}
-            <strong className="text-bitcoin-orange">open source</strong>: fork
-            the repo, point it at your own Xverse wallet and Kraken account,
-            run your own copy. The magic is the code, and the code is yours.
+            The wizard trades its own capital.{' '}
+            <strong className="text-bitcoin-orange">Open source</strong> —{' '}
+            fork it, run your own.
           </p>
         </div>
       </div>
@@ -1576,10 +1551,8 @@ function RunYourOwnSection({ state }: { state: DashboardState }) {
         <h2 className="text-4xl md:text-6xl font-derp text-wizard-black mb-4 -rotate-1">
           Run Your Own Wizard
         </h2>
-        <p className="font-caveat text-xl text-wizard-text mb-8 max-w-2xl mx-auto">
-          MIT licensed. TypeScript. Single repo. Uses the official{' '}
-          <strong>Kraken CLI</strong> on the CEX side and DotSwap's V3 PSBT
-          flow on the L1 side. Bring your own keys.
+        <p className="font-caveat text-xl text-wizard-text mb-8">
+          MIT. TypeScript. Single repo. Bring your own keys.
         </p>
 
         <div className="bg-wizard-black text-wizard-highlight font-mono text-sm md:text-base p-6 rounded-[14px_4px_14px_4px] border-3 border-wizard-black shadow-[4px_4px_0_#040104] text-left max-w-2xl mx-auto -rotate-[0.3deg]">
@@ -1640,9 +1613,9 @@ function RunYourOwnSection({ state }: { state: DashboardState }) {
 function BridgeFooter() {
   return (
     <footer className="bg-wizard-black text-white px-4 py-10 text-center">
-      <p className="font-derp text-2xl">✨ Magic Internet Money Runes Bridge ✨</p>
+      <p className="font-derp text-2xl">✨ The Wizard ✨</p>
       <p className="font-caveat text-base text-wizard-beard mt-2">
-        Built for the $MIM and $DOG armies. No utility. No pooled funds. Maximum whimsy.
+        a Magic Internet Money creation · for the $MIM and $DOG armies
       </p>
       <div className="mt-4 flex justify-center gap-4 font-caveat text-base">
         <a className="hover:text-bitcoin-orange" href="https://magicinternetmoney.party">
@@ -1721,12 +1694,10 @@ export default function BridgePage() {
       )}
       {state.killSwitch?.active && (
         <div className="sticky top-0 z-50 bg-glitch-magenta text-white border-b-4 border-wizard-black px-4 py-3 text-center font-derp text-base md:text-lg shadow-[0_4px_0_#040104]">
-          ⏸ BRIDGE PAUSED ·{' '}
+          ⏸ THE WIZARD IS RESTING ·{' '}
           <span className="font-caveat font-normal">
             {state.killSwitch.reason ?? 'manual halt'}
-          </span>{' '}
-          · the wizard is on a break; all spell-casting is suspended until
-          the operator un-pauses
+          </span>
         </div>
       )}
       <BridgeHero state={state} />
