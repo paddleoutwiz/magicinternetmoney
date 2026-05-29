@@ -696,8 +696,36 @@ function fmtMinutes(min: number): string {
 // ---- Treasury --------------------------------------------------------------
 
 function TreasurySection({ state }: { state: DashboardState }) {
+  // Combine per-asset deltas across both venues — the treasury is ONE
+  // pool; routing inventory between Kraken and the wallet is execution
+  // plumbing, not a P&L event. So we sum kraken + wallet deltas per
+  // asset and show the unified net change since launch.
   const krakenDeltas = state.inventoryDeltas?.kraken ?? [];
   const walletDeltas = state.inventoryDeltas?.wallet ?? [];
+  const combinedByAsset = new Map<
+    string,
+    { asset: string; amountDelta: number; usdDelta: number; current: number }
+  >();
+  for (const d of [...krakenDeltas, ...walletDeltas]) {
+    const prev = combinedByAsset.get(d.asset);
+    if (prev) {
+      prev.amountDelta += d.amountDelta;
+      prev.usdDelta += d.usdDelta;
+      prev.current += d.current;
+    } else {
+      combinedByAsset.set(d.asset, {
+        asset: d.asset,
+        amountDelta: d.amountDelta,
+        usdDelta: d.usdDelta,
+        current: d.current,
+      });
+    }
+  }
+  const combined = [...combinedByAsset.values()].sort(
+    (a, b) => Math.abs(b.usdDelta) - Math.abs(a.usdDelta),
+  );
+  const totalUsdDelta = state.inventoryDeltas?.totalUsdDelta ?? 0;
+
   return (
     <section className="relative px-4 py-16 bg-white/90">
       <div className="max-w-6xl mx-auto">
@@ -705,7 +733,7 @@ function TreasurySection({ state }: { state: DashboardState }) {
           The Wizard's Vault
         </h2>
         <p className="text-center font-caveat text-xl text-wizard-text mb-12">
-          Working capital. The interesting bit is how much has moved.
+          One treasury, two locations. The interesting bit is how much has moved.
         </p>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -715,7 +743,6 @@ function TreasurySection({ state }: { state: DashboardState }) {
             color="bitcoin-orange"
             rotate="-rotate-1"
             balances={state.inventory.kraken}
-            deltas={krakenDeltas}
           />
           <VaultCard
             title="In the Wallet"
@@ -723,7 +750,6 @@ function TreasurySection({ state }: { state: DashboardState }) {
             color="wizard-blue"
             rotate="rotate-1"
             balances={state.inventory.wallet}
-            deltas={walletDeltas}
             href={`https://mempool.space/address/${state.agent.address}`}
           />
         </div>
@@ -734,11 +760,73 @@ function TreasurySection({ state }: { state: DashboardState }) {
             {fmtUsd(state.inventory.totalUsd)}
           </span>
         </div>
-        {state.inventoryDeltas && (
-          <p className="mt-4 text-center font-caveat text-base text-wizard-beard">
-            tracking deltas since{' '}
-            {new Date(state.inventoryDeltas.recordedAt).toLocaleString()}
-          </p>
+
+        {state.inventoryDeltas && combined.length > 0 && (
+          <div className="mt-10 max-w-3xl mx-auto bg-white border-3 border-wizard-black rounded-[18px_5px_18px_5px] shadow-[4px_4px_0_#040104] p-6 -rotate-[0.5deg]">
+            <div className="flex items-baseline justify-between mb-1 flex-wrap gap-2">
+              <h3 className="font-derp text-2xl md:text-3xl text-wizard-black">
+                Net change since launch
+              </h3>
+              <span
+                className={`font-derp text-2xl md:text-3xl ${
+                  totalUsdDelta >= 0
+                    ? 'text-wizard-highlight'
+                    : 'text-glitch-magenta'
+                }`}
+              >
+                {totalUsdDelta >= 0 ? '+' : ''}
+                {fmtUsd(totalUsdDelta)}
+              </span>
+            </div>
+            <p className="font-caveat text-sm text-wizard-text mb-4">
+              kraken + wallet, summed per asset
+            </p>
+            <ul className="space-y-2">
+              {combined.map((c) => {
+                const compact = Math.abs(c.amountDelta) > 100_000;
+                const positive = c.amountDelta > 0;
+                const zero = Math.abs(c.amountDelta) < 0.0000001;
+                return (
+                  <li
+                    key={c.asset}
+                    className="border-b border-wizard-beard/40 pb-1 last:border-0 flex items-baseline justify-between gap-4"
+                  >
+                    <span className="font-derp text-xl text-wizard-black w-16">
+                      {c.asset}
+                    </span>
+                    <span
+                      className={`font-caveat text-lg flex-1 text-right ${
+                        zero
+                          ? 'text-wizard-beard'
+                          : positive
+                            ? 'text-wizard-highlight'
+                            : 'text-glitch-magenta'
+                      }`}
+                    >
+                      {zero ? '±0' : (positive ? '+' : '') + fmtNumber(c.amountDelta, { compact })}
+                    </span>
+                    <span
+                      className={`font-mono text-sm w-28 text-right ${
+                        Math.abs(c.usdDelta) < 0.01
+                          ? 'text-wizard-beard'
+                          : c.usdDelta > 0
+                            ? 'text-wizard-highlight'
+                            : 'text-glitch-magenta'
+                      }`}
+                    >
+                      {Math.abs(c.usdDelta) < 0.01
+                        ? '±$0'
+                        : (c.usdDelta > 0 ? '+' : '') + fmtUsd(c.usdDelta)}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-4 text-right font-caveat text-xs text-wizard-beard">
+              tracking since{' '}
+              {new Date(state.inventoryDeltas.recordedAt).toLocaleString()}
+            </p>
+          </div>
         )}
       </div>
     </section>
@@ -751,7 +839,6 @@ function VaultCard({
   color,
   rotate,
   balances,
-  deltas,
   href,
 }: {
   title: string;
@@ -759,14 +846,10 @@ function VaultCard({
   color: string;
   rotate: string;
   balances: { asset: string; amount: number; usdValue: number }[];
-  deltas?: { asset: string; amountDelta: number; usdDelta: number }[];
   href?: string;
 }) {
   const sorted = [...balances].sort((a, b) => b.usdValue - a.usdValue);
   const total = sorted.reduce((s, b) => s + b.usdValue, 0);
-  const deltaByAsset = new Map(
-    (deltas ?? []).map((d) => [d.asset, d] as const),
-  );
   const wrapped = (
     <div
       className={`bg-white border-3 border-wizard-black rounded-[18px_5px_18px_5px] shadow-[4px_4px_0_#040104] p-6 ${rotate} hover:rotate-0 transition-all`}
@@ -778,10 +861,7 @@ function VaultCard({
       <p className="font-caveat text-sm text-wizard-text mb-4">{subtitle}</p>
       <ul className="space-y-2">
         {sorted.map((b) => {
-          const d = deltaByAsset.get(b.asset);
           const compact = b.amount > 100_000;
-          const showDelta = d && Math.abs(d.amountDelta) > 0.0000001;
-          const positive = d ? d.amountDelta > 0 : false;
           return (
             <li
               key={b.asset}
@@ -798,20 +878,6 @@ function VaultCard({
                   {fmtUsd(b.usdValue)}
                 </span>
               </div>
-              {showDelta && (
-                <div className="text-right font-caveat text-xs">
-                  <span
-                    className={
-                      positive
-                        ? 'text-wizard-highlight'
-                        : 'text-glitch-magenta'
-                    }
-                  >
-                    {positive ? '+' : ''}
-                    {fmtNumber(d!.amountDelta, { compact })} since launch
-                  </span>
-                </div>
-              )}
             </li>
           );
         })}
