@@ -721,10 +721,15 @@ function TreasurySection({ state }: { state: DashboardState }) {
       });
     }
   }
-  const combined = [...combinedByAsset.values()].sort(
-    (a, b) => Math.abs(b.usdDelta) - Math.abs(a.usdDelta),
-  );
-  const totalUsdDelta = state.inventoryDeltas?.totalUsdDelta ?? 0;
+  // Sort by absolute amount delta normalized by current balance so the
+  // most-impactful changes surface first regardless of asset units
+  // (10 MIM out of 12M vs 0.00268 BTC out of 0.035 aren't comparable in
+  // raw magnitude). Falls back to absolute delta for assets at 0.
+  const combined = [...combinedByAsset.values()].sort((a, b) => {
+    const aRel = a.current > 0 ? Math.abs(a.amountDelta) / a.current : Math.abs(a.amountDelta);
+    const bRel = b.current > 0 ? Math.abs(b.amountDelta) / b.current : Math.abs(b.amountDelta);
+    return bRel - aRel;
+  });
 
   return (
     <section className="relative px-4 py-16 bg-white/90">
@@ -763,23 +768,12 @@ function TreasurySection({ state }: { state: DashboardState }) {
 
         {state.inventoryDeltas && combined.length > 0 && (
           <div className="mt-10 max-w-3xl mx-auto bg-white border-3 border-wizard-black rounded-[18px_5px_18px_5px] shadow-[4px_4px_0_#040104] p-6 -rotate-[0.5deg]">
-            <div className="flex items-baseline justify-between mb-1 flex-wrap gap-2">
-              <h3 className="font-derp text-2xl md:text-3xl text-wizard-black">
-                Net change since launch
-              </h3>
-              <span
-                className={`font-derp text-2xl md:text-3xl ${
-                  totalUsdDelta >= 0
-                    ? 'text-wizard-highlight'
-                    : 'text-glitch-magenta'
-                }`}
-              >
-                {totalUsdDelta >= 0 ? '+' : ''}
-                {fmtUsd(totalUsdDelta)}
-              </span>
-            </div>
+            <h3 className="font-derp text-2xl md:text-3xl text-wizard-black">
+              Net change since launch
+            </h3>
             <p className="font-caveat text-sm text-wizard-text mb-4">
-              kraken + wallet, summed per asset
+              kraken + wallet, summed per asset. USD valuations move with
+              the market — the asset balances are the honest signal.
             </p>
             <ul className="space-y-2">
               {combined.map((c) => {
@@ -794,8 +788,11 @@ function TreasurySection({ state }: { state: DashboardState }) {
                     <span className="font-derp text-xl text-wizard-black w-16">
                       {c.asset}
                     </span>
+                    <span className="font-caveat text-sm text-wizard-beard flex-1 text-right">
+                      now {fmtNumber(c.current, { compact: c.current > 100_000 })}
+                    </span>
                     <span
-                      className={`font-caveat text-lg flex-1 text-right ${
+                      className={`font-derp text-xl w-40 text-right ${
                         zero
                           ? 'text-wizard-beard'
                           : positive
@@ -804,19 +801,6 @@ function TreasurySection({ state }: { state: DashboardState }) {
                       }`}
                     >
                       {zero ? '±0' : (positive ? '+' : '') + fmtNumber(c.amountDelta, { compact })}
-                    </span>
-                    <span
-                      className={`font-mono text-sm w-28 text-right ${
-                        Math.abs(c.usdDelta) < 0.01
-                          ? 'text-wizard-beard'
-                          : c.usdDelta > 0
-                            ? 'text-wizard-highlight'
-                            : 'text-glitch-magenta'
-                      }`}
-                    >
-                      {Math.abs(c.usdDelta) < 0.01
-                        ? '±$0'
-                        : (c.usdDelta > 0 ? '+' : '') + fmtUsd(c.usdDelta)}
                     </span>
                   </li>
                 );
