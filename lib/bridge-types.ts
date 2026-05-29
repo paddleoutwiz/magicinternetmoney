@@ -89,6 +89,21 @@ export interface DashboardState {
     reason?: string;
     path: string;
   };
+  /**
+   * Open hedge-failed legs (partial arbs). Each entry is a leg where the
+   * Kraken side filled but the DotSwap side did not — operator carries
+   * naked exposure until the position is closed manually.
+   */
+  hedgeFailures?: Array<{
+    legId: string;
+    token: string;
+    direction: string;
+    asset: string;
+    amount: number;
+    side: 'long' | 'short';
+    at: string;
+    reason: string;
+  }>;
   config: {
     edgeThresholdPct: number;
     maxTradeUsd: number;

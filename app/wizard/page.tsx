@@ -1854,6 +1854,20 @@ export default function BridgePage() {
           </span>
         </div>
       )}
+      {(state.hedgeFailures?.length ?? 0) > 0 && (
+        <div className="sticky top-0 z-40 bg-magic-yellow text-wizard-black border-b-4 border-wizard-black px-4 py-3 text-center font-derp text-base md:text-lg shadow-[0_4px_0_#040104]">
+          ⚠ {state.hedgeFailures!.length} OPEN HEDGE
+          {state.hedgeFailures!.length === 1 ? '' : 'S'} ·{' '}
+          <span className="font-caveat font-normal">
+            {state.hedgeFailures!.map((h, i) => (
+              <span key={h.legId}>
+                {i > 0 ? ' · ' : ''}
+                {h.side} {h.amount.toLocaleString()} {h.asset}
+              </span>
+            ))}
+          </span>
+        </div>
+      )}
       <BridgeHero state={state} />
       <LiveEdgeSection state={state} />
       {state.markets && state.markets.length > 0 && (
