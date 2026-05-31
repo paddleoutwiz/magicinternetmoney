@@ -259,6 +259,11 @@ function AgentStateBanner({ state }: { state: DashboardState }) {
   // has profitable cross-venue spread NET of all fees. This is more honest
   // than the gross-spread-based summary.recentBps for "would the bot fire
   // right now."
+  //
+  // IMPORTANT: both netPct and edgeThresholdPct are already in PERCENT
+  // units (e.g. -0.76 means -0.76%, not -76%). Compare them directly;
+  // do NOT multiply by 100. (The EdgeCard component below uses the same
+  // convention.)
   const edgeThresholdPct = state.config.edgeThresholdPct;
   const tokensWithEdge: string[] = [];
   for (const edge of state.edges) {
@@ -266,7 +271,7 @@ function AgentStateBanner({ state }: { state: DashboardState }) {
       (best, s) => (best === null || s.netPct > best.netPct ? s : best),
       null,
     );
-    if (bestSized && bestSized.netPct * 100 >= edgeThresholdPct) {
+    if (bestSized && bestSized.netPct >= edgeThresholdPct) {
       tokensWithEdge.push(edge.token);
     }
   }
@@ -396,12 +401,13 @@ function AgentStateBanner({ state }: { state: DashboardState }) {
             <div className="font-mono text-wizard-black text-base">
               {state.edges
                 .map((e) => {
+                  // netPct is already in percent units (e.g. -0.76 = -0.76%).
                   const best = e.sized.reduce<typeof e.sized[number] | null>(
                     (b, s) => (b === null || s.netPct > b.netPct ? s : b),
                     null,
                   );
                   return best
-                    ? `${e.token}: ${(best.netPct * 100).toFixed(2)}%`
+                    ? `${e.token}: ${best.netPct.toFixed(2)}%`
                     : `${e.token}: —`;
                 })
                 .join('  ·  ')}
