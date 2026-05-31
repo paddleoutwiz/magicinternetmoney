@@ -174,6 +174,9 @@ function LiveEdgeSection({ state }: { state: DashboardState }) {
           Live cross-venue prices. Snapshot {timeAgo(state.capturedAt)}.
         </p>
 
+        {/* Agent-state banner: explains why the bot is/isn't firing right now */}
+        <AgentStateBanner state={state} />
+
         <div className="grid md:grid-cols-2 gap-6">
           {state.edges.map((edge) => (
             <EdgeCard key={edge.token} edge={edge} threshold={state.config.edgeThresholdPct} />
@@ -205,6 +208,204 @@ function LiveEdgeSection({ state }: { state: DashboardState }) {
       </div>
     </section>
   );
+}
+
+// ---- Agent state banner ----------------------------------------------------
+//
+// Surfaces an interpretive headline above the live edge cards so a casual
+// viewer doesn't have to decode bps math to understand why the bot is or
+// isn't firing. The three states are:
+//
+//   HUNTING   — at least one token has a current gross spread that exceeds
+//               its breakeven threshold. The Wizard is actively probing
+//               sizes for a profitable fire.
+//   WAITING   — every token's gross spread is below breakeven. The Wizard
+//               is correctly skipping every cycle. This is the most-common
+//               state in a tightening market.
+//   CONVERGED — the recent (1h) spreads have narrowed materially (>= 50bps)
+//               from the 24h baseline AND we're in WAITING. The bot
+//               participated in closing the gap; the market is now too
+//               efficient to arb.
+//
+// The CONVERGED narrative is the strongest contest story: "the agent didn't
+// just trade, it succeeded at the convergence it was hunting and went
+// quiet — because trading further would be unprofitable."
+
+function AgentStateBanner({ state }: { state: DashboardState }) {
+  const summary = state.spreadHistory?.summary;
+  // No history yet (fresh daemon): show a minimal placeholder, no claims.
+  if (!summary) {
+    return (
+      <div className="mb-10 bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-5 -rotate-[0.3deg]">
+        <div className="font-derp text-2xl text-wizard-black">
+          Warming up…
+        </div>
+        <p className="font-caveat text-base text-wizard-text mt-1">
+          Building spread history. Decisions will surface here once the
+          wizard has watched the market for a bit.
+        </p>
+      </div>
+    );
+  }
+
+  const breakeven = summary.breakevenBps ?? 0;
+  const tokens = Object.keys(summary.recentBps);
+
+  // A token is "above breakeven right now" if |recent| >= breakeven.
+  // recent can be signed (negative = inverted direction); breakeven is
+  // unsigned (it's a magnitude).
+  const aboveBreakeven = tokens.filter(
+    (t) => Math.abs(summary.recentBps[t] ?? 0) >= breakeven,
+  );
+  const hunting = aboveBreakeven.length > 0;
+
+  // Average abs(delta) across tokens. delta = recent - baseline; we want
+  // to know how much the spread MAGNITUDE has tightened, so we compare
+  // |recent| vs |baseline|, not raw delta. A positive convergedDelta
+  // means the magnitude shrunk; negative means it widened.
+  const convergedDelta =
+    tokens.reduce((sum, t) => {
+      const r = Math.abs(summary.recentBps[t] ?? 0);
+      const b = Math.abs(summary.baselineBps[t] ?? 0);
+      return sum + (b - r); // positive when recent magnitude < baseline
+    }, 0) / Math.max(1, tokens.length);
+
+  const converged = !hunting && convergedDelta >= 50;
+
+  // Time since last fire — surface as a contextualizing detail, not a
+  // headline (a long silence with a tightening market is good, not bad).
+  const lastFire =
+    state.recentFires.length > 0
+      ? state.recentFires.reduce((latest, f) =>
+          new Date(f.createdAt).getTime() > new Date(latest.createdAt).getTime()
+            ? f
+            : latest,
+        )
+      : null;
+  const sinceLastFire = lastFire
+    ? humanizeSince(lastFire.createdAt)
+    : null;
+
+  // Minutes-wide stat across the 24h window (we summarize the max across
+  // tokens — i.e. "the WIDER of the two markets was wide enough to fire
+  // for N minutes").
+  const minutesAboveBreakeven = summary.minutesAboveBreakeven ?? {};
+  const maxMinutesWide = Math.max(
+    0,
+    ...tokens.map((t) => minutesAboveBreakeven[t] ?? 0),
+  );
+
+  // Pick state-specific copy. We deliberately frame WAITING/CONVERGED
+  // as positive states — the bot is doing its job by staying quiet.
+  let label: string;
+  let labelClass: string;
+  let headline: string;
+  let body: string;
+  if (hunting) {
+    label = 'HUNTING';
+    labelClass = 'bg-wizard-highlight text-wizard-black';
+    headline = `Edge spotted on ${aboveBreakeven.join(' & ')}.`;
+    body =
+      'At least one venue pair currently exceeds the firing threshold. ' +
+      'The wizard is probing sizes for the next arb.';
+  } else if (converged) {
+    label = 'CONVERGED';
+    labelClass = 'bg-wizard-blue text-white';
+    headline = `The wizard did its job. Spreads tightened by ~${Math.round(convergedDelta)} bps.`;
+    body =
+      'Recent spreads have narrowed materially from baseline. The market is ' +
+      'now too efficient to arb profitably; the wizard correctly skips every ' +
+      'cycle until opportunity returns.';
+  } else {
+    label = 'WAITING';
+    labelClass = 'bg-magic-yellow text-wizard-black';
+    headline = "No edge right now. The wizard is waiting.";
+    body =
+      'Every venue pair is currently below the firing threshold. Firing ' +
+      'into a tight spread would bleed fees. The wizard does nothing until ' +
+      'the spread widens past breakeven.';
+  }
+
+  return (
+    <div className="mb-10 bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-5 -rotate-[0.3deg]">
+      <div className="flex items-start justify-between gap-4 mb-3 flex-wrap">
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <span
+            className={`px-2 py-0.5 rounded-[6px_2px_6px_2px] border-2 border-wizard-black font-derp text-sm tracking-wider ${labelClass}`}
+          >
+            {label}
+          </span>
+          <div className="font-derp text-2xl md:text-3xl text-wizard-black">
+            {headline}
+          </div>
+        </div>
+        {sinceLastFire && (
+          <div className="font-caveat text-sm text-wizard-beard whitespace-nowrap">
+            last fire {sinceLastFire} ago
+          </div>
+        )}
+      </div>
+      <p className="font-caveat text-base md:text-lg text-wizard-text">
+        {body}
+      </p>
+
+      {/* Supporting stats row — only shown for WAITING/CONVERGED, where the
+          viewer needs more evidence that "quiet" is the right state. */}
+      {!hunting && (
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm font-caveat text-wizard-text">
+          <div className="border-2 border-wizard-black rounded-[8px_3px_8px_3px] p-3 bg-[#fbfbf5]">
+            <div className="text-wizard-beard">breakeven threshold</div>
+            <div className="font-mono text-wizard-black text-base">
+              ~{Math.round(breakeven)} bps gross spread
+            </div>
+            <div className="text-xs text-wizard-beard mt-0.5">
+              what the spread must exceed for an arb to be profitable
+            </div>
+          </div>
+          <div className="border-2 border-wizard-black rounded-[8px_3px_8px_3px] p-3 bg-[#fbfbf5]">
+            <div className="text-wizard-beard">avg convergence</div>
+            <div
+              className={`font-mono text-base ${
+                convergedDelta >= 50
+                  ? 'text-wizard-highlight'
+                  : convergedDelta <= -50
+                    ? 'text-glitch-magenta'
+                    : 'text-wizard-black'
+              }`}
+            >
+              {convergedDelta >= 0 ? '−' : '+'}
+              {Math.round(Math.abs(convergedDelta))} bps vs baseline
+            </div>
+            <div className="text-xs text-wizard-beard mt-0.5">
+              how much the spread has tightened (or widened) since launch
+            </div>
+          </div>
+          <div className="border-2 border-wizard-black rounded-[8px_3px_8px_3px] p-3 bg-[#fbfbf5]">
+            <div className="text-wizard-beard">edge available (24h)</div>
+            <div className="font-mono text-wizard-black text-base">
+              {fmtMinutes(maxMinutesWide)}
+            </div>
+            <div className="text-xs text-wizard-beard mt-0.5">
+              minutes the spread was wide enough to fire in the last 24h
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Humanize "time since" — short form for header use.
+function humanizeSince(iso: string): string {
+  const then = new Date(iso).getTime();
+  const ms = Date.now() - then;
+  const min = Math.floor(ms / 60000);
+  if (min < 1) return '< 1m';
+  if (min < 60) return `${min}m`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  return `${d}d`;
 }
 
 // ---- Spread convergence panel ----------------------------------------------
