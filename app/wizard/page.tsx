@@ -214,22 +214,27 @@ function LiveEdgeSection({ state }: { state: DashboardState }) {
 //
 // Surfaces an interpretive headline above the live edge cards so a casual
 // viewer doesn't have to decode bps math to understand why the bot is or
-// isn't firing. The three states are:
+// isn't firing. Four states, in priority order:
 //
-//   HUNTING   — at least one token has a current gross spread that exceeds
-//               its breakeven threshold. The Wizard is actively probing
-//               sizes for a profitable fire.
-//   WAITING   — every token's gross spread is below breakeven. The Wizard
-//               is correctly skipping every cycle. This is the most-common
-//               state in a tightening market.
-//   CONVERGED — the recent (1h) spreads have narrowed materially (>= 50bps)
-//               from the 24h baseline AND we're in WAITING. The bot
-//               participated in closing the gap; the market is now too
-//               efficient to arb.
+//   HUNTING           — at least one current sized edge has net P&L above
+//                       the configured threshold. The wizard wants to fire.
+//   INVENTORY_STARVED — the wizard sees positive net edge but can't deploy
+//                       because the relevant inventory side (most commonly
+//                       USD on Kraken) is below the minimum trade size.
+//                       This is REAL — easily 30%+ of cycles in tight
+//                       markets land here, and viewers deserve honesty
+//                       about it rather than a "we're just patient" story.
+//   CONVERGED         — recent (1h) gross spreads have narrowed materially
+//                       from the 24h baseline AND we're not inventory-
+//                       starved AND no edge is currently available. The
+//                       bot participated in closing the gap.
+//   WAITING           — net edge below threshold, inventory is healthy,
+//                       the market is quiet. Skipping is correct.
 //
-// The CONVERGED narrative is the strongest contest story: "the agent didn't
-// just trade, it succeeded at the convergence it was hunting and went
-// quiet — because trading further would be unprofitable."
+// Earlier versions of this banner trumpeted "edge available 14h 58m" based
+// on the gross-spread minutesAboveBreakeven stat. That number was wrong as
+// a fire-availability indicator because (a) it's gross, not net, and (b)
+// it ignored inventory constraints. We replaced it with honest signals.
 
 function AgentStateBanner({ state }: { state: DashboardState }) {
   const summary = state.spreadHistory?.summary;
@@ -248,32 +253,54 @@ function AgentStateBanner({ state }: { state: DashboardState }) {
     );
   }
 
-  const breakeven = summary.breakevenBps ?? 0;
+  // ---- Step 1: detect live net-edge hunting state -------------------------
+  //
+  // A sized edge with netPct >= edgeThreshold means the current snapshot
+  // has profitable cross-venue spread NET of all fees. This is more honest
+  // than the gross-spread-based summary.recentBps for "would the bot fire
+  // right now."
+  const edgeThresholdPct = state.config.edgeThresholdPct;
+  const tokensWithEdge: string[] = [];
+  for (const edge of state.edges) {
+    const bestSized = edge.sized.reduce<typeof edge.sized[number] | null>(
+      (best, s) => (best === null || s.netPct > best.netPct ? s : best),
+      null,
+    );
+    if (bestSized && bestSized.netPct * 100 >= edgeThresholdPct) {
+      tokensWithEdge.push(edge.token);
+    }
+  }
+  const hunting = tokensWithEdge.length > 0;
+
+  // ---- Step 2: detect inventory starvation --------------------------------
+  //
+  // The most common starvation pattern: USD on Kraken drops below the
+  // smallest probe size, blocking every buy_kraken_sell_dotswap cycle even
+  // when edge exists. We flag it whenever USD < $100 (the smallest ladder
+  // rung) AND we have meaningful inventory elsewhere on Kraken (so it's a
+  // distribution problem, not a "the bot is broke" problem).
+  const krakenUsdRow = state.inventory.kraken.find((r) => r.asset === 'USD');
+  const krakenUsdValue = krakenUsdRow?.usdValue ?? 0;
+  const krakenNonUsdValue = state.inventory.kraken
+    .filter((r) => r.asset !== 'USD' && r.asset !== 'USDC')
+    .reduce((s, r) => s + r.usdValue, 0);
+  const inventoryStarved =
+    !hunting &&
+    krakenUsdValue < 100 &&
+    krakenNonUsdValue >= 200;
+
+  // ---- Step 3: convergence vs baseline (only meaningful if not starved) ---
   const tokens = Object.keys(summary.recentBps);
-
-  // A token is "above breakeven right now" if |recent| >= breakeven.
-  // recent can be signed (negative = inverted direction); breakeven is
-  // unsigned (it's a magnitude).
-  const aboveBreakeven = tokens.filter(
-    (t) => Math.abs(summary.recentBps[t] ?? 0) >= breakeven,
-  );
-  const hunting = aboveBreakeven.length > 0;
-
-  // Average abs(delta) across tokens. delta = recent - baseline; we want
-  // to know how much the spread MAGNITUDE has tightened, so we compare
-  // |recent| vs |baseline|, not raw delta. A positive convergedDelta
-  // means the magnitude shrunk; negative means it widened.
   const convergedDelta =
     tokens.reduce((sum, t) => {
       const r = Math.abs(summary.recentBps[t] ?? 0);
       const b = Math.abs(summary.baselineBps[t] ?? 0);
-      return sum + (b - r); // positive when recent magnitude < baseline
+      return sum + (b - r);
     }, 0) / Math.max(1, tokens.length);
 
-  const converged = !hunting && convergedDelta >= 50;
+  const converged = !hunting && !inventoryStarved && convergedDelta >= 50;
 
-  // Time since last fire — surface as a contextualizing detail, not a
-  // headline (a long silence with a tightening market is good, not bad).
+  // ---- Step 4: last fire timestamp ----------------------------------------
   const lastFire =
     state.recentFires.length > 0
       ? state.recentFires.reduce((latest, f) =>
@@ -282,21 +309,9 @@ function AgentStateBanner({ state }: { state: DashboardState }) {
             : latest,
         )
       : null;
-  const sinceLastFire = lastFire
-    ? humanizeSince(lastFire.createdAt)
-    : null;
+  const sinceLastFire = lastFire ? humanizeSince(lastFire.createdAt) : null;
 
-  // Minutes-wide stat across the 24h window (we summarize the max across
-  // tokens — i.e. "the WIDER of the two markets was wide enough to fire
-  // for N minutes").
-  const minutesAboveBreakeven = summary.minutesAboveBreakeven ?? {};
-  const maxMinutesWide = Math.max(
-    0,
-    ...tokens.map((t) => minutesAboveBreakeven[t] ?? 0),
-  );
-
-  // Pick state-specific copy. We deliberately frame WAITING/CONVERGED
-  // as positive states — the bot is doing its job by staying quiet.
+  // ---- Step 5: pick state-specific copy -----------------------------------
   let label: string;
   let labelClass: string;
   let headline: string;
@@ -304,26 +319,36 @@ function AgentStateBanner({ state }: { state: DashboardState }) {
   if (hunting) {
     label = 'HUNTING';
     labelClass = 'bg-wizard-highlight text-wizard-black';
-    headline = `Edge spotted on ${aboveBreakeven.join(' & ')}.`;
+    headline = `Edge spotted on ${tokensWithEdge.join(' & ')}.`;
     body =
-      'At least one venue pair currently exceeds the firing threshold. ' +
+      'At least one venue pair currently has net edge above threshold. ' +
       'The wizard is probing sizes for the next arb.';
+  } else if (inventoryStarved) {
+    label = 'INVENTORY-STARVED';
+    labelClass = 'bg-magic-yellow text-wizard-black';
+    headline = `Edge appears, but USD on Kraken is low ($${krakenUsdValue.toFixed(0)}).`;
+    body =
+      'Working capital is stuck in the wrong format on the wrong side. ' +
+      'The wizard sees positive net edge in some cycles but can\u2019t fire ' +
+      'because the buy-Kraken direction needs at least $100 of USD on Kraken. ' +
+      'Auto-rebalance currently only handles BTC; converting other holdings ' +
+      'back to USD is a manual step (and a known improvement on the roadmap).';
   } else if (converged) {
     label = 'CONVERGED';
     labelClass = 'bg-wizard-blue text-white';
-    headline = `The wizard did its job. Spreads tightened by ~${Math.round(convergedDelta)} bps.`;
+    headline = `Spreads tightened ~${Math.round(convergedDelta)} bps from baseline.`;
     body =
-      'Recent spreads have narrowed materially from baseline. The market is ' +
-      'now too efficient to arb profitably; the wizard correctly skips every ' +
-      'cycle until opportunity returns.';
+      'Recent spreads have narrowed materially from the 24-hour baseline. ' +
+      'The wizard participated in closing the gap; the market is now ' +
+      'efficient enough that further trades would be unprofitable.';
   } else {
     label = 'WAITING';
     labelClass = 'bg-magic-yellow text-wizard-black';
-    headline = "No edge right now. The wizard is waiting.";
+    headline = 'No net edge right now. The wizard is waiting.';
     body =
-      'Every venue pair is currently below the firing threshold. Firing ' +
-      'into a tight spread would bleed fees. The wizard does nothing until ' +
-      'the spread widens past breakeven.';
+      'After fees, every venue pair is currently below the firing threshold. ' +
+      'Firing into a tight spread would bleed fees. The wizard does nothing ' +
+      'until the spread widens.';
   }
 
   return (
@@ -349,21 +374,44 @@ function AgentStateBanner({ state }: { state: DashboardState }) {
         {body}
       </p>
 
-      {/* Supporting stats row — only shown for WAITING/CONVERGED, where the
-          viewer needs more evidence that "quiet" is the right state. */}
+      {/* Supporting stats — shown for all non-HUNTING states so viewers can
+          see the supporting evidence for whatever state we're in. */}
       {!hunting && (
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm font-caveat text-wizard-text">
           <div className="border-2 border-wizard-black rounded-[8px_3px_8px_3px] p-3 bg-[#fbfbf5]">
-            <div className="text-wizard-beard">breakeven threshold</div>
-            <div className="font-mono text-wizard-black text-base">
-              ~{Math.round(breakeven)} bps gross spread
+            <div className="text-wizard-beard">USD on Kraken</div>
+            <div
+              className={`font-mono text-base ${
+                inventoryStarved ? 'text-glitch-magenta' : 'text-wizard-black'
+              }`}
+            >
+              ${krakenUsdValue.toFixed(2)}
             </div>
             <div className="text-xs text-wizard-beard mt-0.5">
-              what the spread must exceed for an arb to be profitable
+              needed for buy-Kraken arbs (min ladder rung is $100)
             </div>
           </div>
           <div className="border-2 border-wizard-black rounded-[8px_3px_8px_3px] p-3 bg-[#fbfbf5]">
-            <div className="text-wizard-beard">avg convergence</div>
+            <div className="text-wizard-beard">net edge right now</div>
+            <div className="font-mono text-wizard-black text-base">
+              {state.edges
+                .map((e) => {
+                  const best = e.sized.reduce<typeof e.sized[number] | null>(
+                    (b, s) => (b === null || s.netPct > b.netPct ? s : b),
+                    null,
+                  );
+                  return best
+                    ? `${e.token}: ${(best.netPct * 100).toFixed(2)}%`
+                    : `${e.token}: —`;
+                })
+                .join('  ·  ')}
+            </div>
+            <div className="text-xs text-wizard-beard mt-0.5">
+              best sized direction, net of all fees
+            </div>
+          </div>
+          <div className="border-2 border-wizard-black rounded-[8px_3px_8px_3px] p-3 bg-[#fbfbf5]">
+            <div className="text-wizard-beard">spread vs baseline (24h)</div>
             <div
               className={`font-mono text-base ${
                 convergedDelta >= 50
@@ -374,19 +422,10 @@ function AgentStateBanner({ state }: { state: DashboardState }) {
               }`}
             >
               {convergedDelta >= 0 ? '−' : '+'}
-              {Math.round(Math.abs(convergedDelta))} bps vs baseline
+              {Math.round(Math.abs(convergedDelta))} bps
             </div>
             <div className="text-xs text-wizard-beard mt-0.5">
-              how much the spread has tightened (or widened) since launch
-            </div>
-          </div>
-          <div className="border-2 border-wizard-black rounded-[8px_3px_8px_3px] p-3 bg-[#fbfbf5]">
-            <div className="text-wizard-beard">edge available (24h)</div>
-            <div className="font-mono text-wizard-black text-base">
-              {fmtMinutes(maxMinutesWide)}
-            </div>
-            <div className="text-xs text-wizard-beard mt-0.5">
-              minutes the spread was wide enough to fire in the last 24h
+              avg change in spread magnitude (negative = tightened)
             </div>
           </div>
         </div>
