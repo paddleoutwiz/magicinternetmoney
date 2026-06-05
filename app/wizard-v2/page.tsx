@@ -45,6 +45,22 @@ interface DashboardSnapshot {
     findings: number;
     last_review_commit: string;
   };
+  shadow_validations?: ShadowValidationsSummary;
+}
+
+interface ShadowValidationsSummary {
+  total: number;
+  last_24h: number;
+  by_status: {
+    ok: number;
+    refused: number;
+    wire_error: number;
+  };
+  avg_latency_ms_24h: number | null;
+  unique_clause_ids_24h: ReadonlyArray<string>;
+  latest_at_unix: number | null;
+  latest_status: 'ok' | 'refused' | 'wire_error' | null;
+  latest_clause_id: string | null;
 }
 
 const API_URL =
@@ -94,6 +110,7 @@ export default function WizardV2Page() {
       <Hero snap={snap} lastFetchOk={lastFetchOk} error={error} />
       {snap !== null && (
         <>
+          <ShadowValidationsSection snap={snap} />
           <RegistriesSection snap={snap} />
           <DaemonSection snap={snap} />
           <AuditSection snap={snap} />
@@ -165,6 +182,14 @@ function Hero({
               rotate="-rotate-1"
             />
             <Stat
+              label="Shadow validations (24h)"
+              value={`${snap.shadow_validations?.last_24h ?? 0}`}
+              rotate="rotate-2"
+              color={
+                snap.shadow_validations?.last_24h ? 'positive' : undefined
+              }
+            />
+            <Stat
               label="Registries loaded"
               value={`${countLoadedRegistries(snap)} / 3`}
               rotate="rotate-1"
@@ -176,11 +201,6 @@ function Hero({
               label="Audit chain"
               value={`${snap.audit_log.total_entries} entries`}
               rotate="-rotate-2"
-            />
-            <Stat
-              label="Module tokens"
-              value={`${snap.module_tokens.length}`}
-              rotate="rotate-2"
             />
           </div>
         )}
@@ -321,6 +341,127 @@ function countLoadedRegistries(snap: DashboardSnapshot): number {
   if (snap.registries.kraken_deposit_addresses !== null) n++;
   if (snap.registries.channels !== null) n++;
   return n;
+}
+
+// ---- Shadow validations -----------------------------------------------------
+
+function ShadowValidationsSection({ snap }: { snap: DashboardSnapshot }) {
+  const sv = snap.shadow_validations;
+  return (
+    <section className="px-4 py-12 bg-gradient-to-b from-magic-yellow/10 to-white/80">
+      <div className="max-w-5xl mx-auto">
+        <h2 className="text-4xl md:text-5xl font-derp text-wizard-black text-center mb-2 -rotate-1">
+          Shadow validations
+        </h2>
+        <p className="text-center font-caveat text-xl text-wizard-text mb-2">
+          v2's safety layer running on v1's real arb-fire traffic
+        </p>
+        <p className="text-center font-caveat text-base text-wizard-text mb-10 max-w-2xl mx-auto">
+          v1 broadcasts; v2 validates the same PSBT against §2.11 and §4 in
+          parallel. v2 never signs; every validation outcome is logged with
+          its typed clause ID.
+        </p>
+
+        {sv === undefined || sv.total === 0 ? (
+          <div className="bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-8 text-center">
+            <div className="font-derp text-3xl text-wizard-black mb-2">
+              waiting for first arb…
+            </div>
+            <div className="font-caveat text-lg text-wizard-text">
+              v1's executor fires roughly 2–5 arbs/day. The next fire will
+              show up here within seconds.
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <KvCard label="Total (all-time)" value={`${sv.total}`} />
+              <KvCard label="Last 24h" value={`${sv.last_24h}`} />
+              <KvCard
+                label="Avg latency"
+                value={
+                  sv.avg_latency_ms_24h === null
+                    ? '—'
+                    : `${sv.avg_latency_ms_24h} ms`
+                }
+              />
+              <KvCard
+                label="Latest status"
+                value={sv.latest_status ?? '—'}
+              />
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
+              <StatusCard
+                label="ok"
+                count={sv.by_status.ok}
+                color="positive"
+              />
+              <StatusCard
+                label="refused"
+                count={sv.by_status.refused}
+                color="negative"
+              />
+              <StatusCard
+                label="wire error"
+                count={sv.by_status.wire_error}
+                color="neutral"
+              />
+            </div>
+
+            {sv.unique_clause_ids_24h.length > 0 && (
+              <>
+                <h3 className="text-2xl font-derp text-wizard-black text-center -rotate-1 mt-8 mb-4">
+                  Active safety clauses (24h)
+                </h3>
+                <div className="flex flex-wrap gap-2 justify-center max-w-3xl mx-auto">
+                  {sv.unique_clause_ids_24h.map((id) => (
+                    <span
+                      key={id}
+                      className="px-3 py-1 bg-wizard-cyan/30 border-2 border-wizard-black rounded-full font-mono text-xs text-wizard-black shadow-[2px_2px_0_#040104]"
+                    >
+                      {id}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-center font-caveat text-sm text-wizard-text mt-4 max-w-2xl mx-auto">
+                  Each ID is a contract clause from{' '}
+                  <code className="font-mono text-xs bg-wizard-cyan/20 px-1 py-0.5 rounded">
+                    contracts/clauses.json
+                  </code>
+                  . The validator rejected a real PSBT because that specific
+                  invariant didn&apos;t hold.
+                </p>
+              </>
+            )}
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function StatusCard({
+  label,
+  count,
+  color,
+}: {
+  label: string;
+  count: number;
+  color: 'positive' | 'negative' | 'neutral';
+}) {
+  const colorClass =
+    color === 'positive'
+      ? 'text-wizard-highlight'
+      : color === 'negative'
+        ? 'text-glitch-magenta'
+        : 'text-wizard-black';
+  return (
+    <div className="bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-6 text-center hover:scale-105 transition-all">
+      <div className="font-caveat text-lg text-wizard-text">{label}</div>
+      <div className={`font-derp text-5xl ${colorClass}`}>{count}</div>
+    </div>
+  );
 }
 
 // ---- Daemon ----------------------------------------------------------------
