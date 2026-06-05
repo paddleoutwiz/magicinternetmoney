@@ -141,6 +141,20 @@ export interface DashboardState {
    * 24h market context: per-venue token volume + bridge's contribution.
    */
   markets?: TokenMarket[];
+  /**
+   * v2 only: Nexus Bitcoin Channel (Fast Execution Account) balances.
+   * When non-empty, the daemon has pre-funded one or more channels and
+   * will route compatible arbs off-chain (sub-block settlement) instead
+   * of broadcasting an L1 PSBT each time.
+   */
+  nexusChannels?: Array<{
+    btcAddress: string;
+    tick: string;
+    availableSats: number;
+    cumulativeDepositedSats: number;
+    cumulativeSpentSats: number;
+    lastReconciledAtUnix: number;
+  }>;
 }
 
 export interface TokenMarket {
@@ -208,6 +222,13 @@ export interface Fire {
   dotswapTxId?: string;
   dotswapConfirmedAt?: string;
   realizedUsd?: number;
+  /**
+   * v2 only: which settlement path the DotSwap leg used.
+   *   'channel' — Nexus Bitcoin Channel (off-chain, sub-block);
+   *   'l1'      — on-chain PSBT broadcast.
+   * Absent on v1 fires.
+   */
+  settlementPath?: 'channel' | 'l1';
 }
 
 /**
