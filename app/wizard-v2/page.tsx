@@ -73,7 +73,7 @@ function BridgeHero({ state }: { state: DashboardState }) {
           </span>
         </h1>
         <h2 className="mt-2 text-2xl md:text-3xl font-derp text-wizard-blue drop-shadow-[2px_2px_0_#040104] rotate-1">
-          ⚡ now with Nexus channels ⚡
+          ⚡ now with a self-hosted Nexus node ⚡
         </h2>
 
         {/* Subtitle */}
@@ -82,9 +82,10 @@ function BridgeHero({ state }: { state: DashboardState }) {
           <strong>$MIM</strong> and <strong>$DOG</strong>. Captures
           cross-venue spread, turns it into{' '}
           <strong className="text-glitch-magenta">burned $MIM</strong>.{' '}
-          Off-chain via{' '}
-          <strong className="text-wizard-blue">Nexus state channels</strong>{' '}
-          when liquidity allows; on-chain when it doesn&apos;t.
+          Trades through a{' '}
+          <strong className="text-wizard-blue">self-hosted Nexus node</strong>{' '}
+          that signs PSBTs internally; wraps every decision in a
+          7-round-adversarially-reviewed safety scaffold.
         </p>
 
         {/* Headline numbers — these measure ecosystem service, not operator P&L. */}
@@ -2134,88 +2135,131 @@ function SafetyScaffoldSection() {
 // ---- Nexus channels (v2-only) ---------------------------------------------
 
 function NexusChannelsSection({ state }: { state: DashboardState }) {
+  // We deliberately drop the previous "channels open" framing.
+  // The honest picture: v2 trades through a SELF-HOSTED NEXUS NODE
+  // running alongside the daemon on bridge-server. The DotSwap leg
+  // goes through that node (which signs with TAKER_MNEMONIC
+  // internally) rather than the operator's hot signer touching a
+  // raw PSBT. The local node would route through Nexus Bitcoin
+  // Channels for sub-block settlement when a Maker session is
+  // available; today it falls back to L1 settlement which is what
+  // these on-chain proofs show.
   const channels = state.nexusChannels ?? [];
-  const btcUsd = state.market?.btcUsd ?? 0;
-  // Channel-mode share over recent fires.
-  const fires = state.recentFires ?? [];
-  const settledFires = fires.filter(
-    (f) => f.settlementPath === 'channel' || f.settlementPath === 'l1',
+  const channelBalance = channels.reduce(
+    (s, c) => s + c.availableSats,
+    0,
   );
-  const channelFires = settledFires.filter(
-    (f) => f.settlementPath === 'channel',
-  );
-  const channelSharePct =
-    settledFires.length > 0
-      ? Math.round((channelFires.length / settledFires.length) * 100)
-      : null;
+
+  // Hardcoded proof links from the live integration. These are real
+  // on-chain swaps signed and broadcast by the self-hosted Nexus
+  // node. Update via a future code change as more fires accrue.
+  const NEXUS_PROOFS: Array<{
+    label: string;
+    txid: string;
+    block?: number;
+    detail: string;
+  }> = [
+    {
+      label: 'first Nexus swap',
+      txid: '952f53aaca8a006e7b75d4695ba0ce7c634314a36c4dea58b181e76ad6ae2f93',
+      block: 952559,
+      detail: '5,043 sats BTC → 5,000 DOG via DotSwap^(N) + DogSwap',
+    },
+    {
+      label: 'channel-funding swap',
+      txid: 'f2b2d7b5fa5d066bdd30ce30d2c08eefc83c8c3240adee362c8117c6ff85e39c',
+      block: 952610,
+      detail: '32,774 sats BTC → 30,000 DOG (funded the Bitcoin Channel deposit)',
+    },
+  ];
 
   return (
     <section className="relative px-4 py-16 bg-gradient-to-b from-wizard-cyan/10 to-white/85">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-4xl md:text-6xl font-derp text-wizard-black text-center mb-2 rotate-1">
-          ⚡ Nexus Channels ⚡
+          ⚡ Nexus Node Integration ⚡
         </h2>
         <p className="text-center font-caveat text-xl md:text-2xl text-wizard-text mb-2">
-          Off-chain settlement when DotSwap has channel-funded liquidity
+          Self-hosted Nexus DOTSWAP DEX node, signing internally
         </p>
         <p className="text-center font-caveat text-base text-wizard-text mb-10 max-w-2xl mx-auto">
-          The Wizard pre-funds a Bitcoin Channel (a 3-of-3 multisig escrow with
-          the Nexus aggregator). When you trade, the swap settles inside that
-          channel — no L1 broadcast, no ten-minute wait. Channels close
-          cooperatively back to your wallet on demand.
+          v2 runs its own DOTSWAP DEX node on the bridge-server. The DotSwap
+          leg of every arb routes through that node, which holds the
+          trading wallet (TAKER_MNEMONIC) and signs PSBTs internally. The
+          bot describes the intent; the node delivers the txid. Bitcoin
+          Channel deposits are pre-funded for sub-block-time settlement
+          when Maker channels match — today the bot falls back to L1
+          settlement on every fire.
         </p>
+
+        {/* Real on-chain proof points */}
+        <div className="grid md:grid-cols-2 gap-6 mb-10">
+          {NEXUS_PROOFS.map((p) => (
+            <a
+              key={p.txid}
+              href={`https://mempool.space/tx/${p.txid}`}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-6 hover:scale-[1.02] hover:shadow-[5px_5px_0_#040104] transition-all"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-caveat text-lg text-wizard-text">
+                  {p.label}
+                </span>
+                <span className="text-xs font-mono px-2 py-1 rounded bg-wizard-highlight/30 text-wizard-black">
+                  on chain
+                </span>
+              </div>
+              <div className="font-derp text-xl text-wizard-black mb-3">
+                {p.detail}
+              </div>
+              <div className="font-mono text-xs text-wizard-black/70 break-all mb-1">
+                {p.txid.slice(0, 16)}…{p.txid.slice(-16)}
+              </div>
+              {p.block !== undefined && (
+                <div className="font-caveat text-sm text-wizard-text">
+                  confirmed at block #{p.block.toLocaleString()}
+                </div>
+              )}
+            </a>
+          ))}
+        </div>
 
         {channels.length === 0 ? (
           <div className="bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-8 text-center">
-            <div className="font-derp text-3xl text-wizard-black mb-2">
-              no channel funded yet
+            <div className="font-derp text-2xl text-wizard-black mb-2">
+              Bitcoin Channel: not currently funded
             </div>
             <div className="font-caveat text-lg text-wizard-text">
-              The daemon is running in L1 fallback mode. Channel will activate
-              after the operator runs{' '}
-              <code className="font-mono text-base bg-wizard-cyan/20 px-1 py-0.5 rounded">
-                wizard-v2 channel deposit --execute
-              </code>
-              .
+              The local node is up and serving the L1 path. Channel mode
+              requires a Maker counterparty currently unavailable for our
+              pairs.
             </div>
           </div>
         ) : (
           <>
-            {/* Channel-mode share stat */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8 max-w-3xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 max-w-3xl mx-auto">
               <Stat
-                label="Channels open"
-                value={String(channels.length)}
-                rotate="-rotate-1"
-              />
-              <Stat
-                label="Channel BTC"
-                value={`${(
-                  channels.reduce((s, c) => s + c.availableSats, 0) / 1e8
-                ).toFixed(4)} BTC`}
+                label="Bitcoin Channel"
+                value={`${(channelBalance / 1e8).toFixed(5)} BTC`}
                 rotate="rotate-1"
                 color="positive"
               />
               <Stat
-                label="Channel-mode share"
-                value={
-                  channelSharePct === null
-                    ? '—'
-                    : `${channelSharePct}% of fires`
-                }
-                rotate="-rotate-2"
-                color={
-                  channelSharePct !== null && channelSharePct >= 50
-                    ? 'positive'
-                    : undefined
-                }
+                label="Settlement path"
+                value="L1 today; channel pending Maker match"
+                rotate="-rotate-1"
               />
             </div>
 
             {/* One card per channel */}
             <div className="grid md:grid-cols-2 gap-6">
               {channels.map((c) => (
-                <ChannelCard key={`${c.btcAddress}:${c.tick}`} channel={c} btcUsd={btcUsd} />
+                <ChannelCard
+                  key={`${c.btcAddress}:${c.tick}`}
+                  channel={c}
+                  btcUsd={state.market?.btcUsd ?? 0}
+                />
               ))}
             </div>
           </>
