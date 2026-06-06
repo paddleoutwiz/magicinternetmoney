@@ -67,25 +67,19 @@ function BridgeHero({ state }: { state: DashboardState }) {
           <span className="inline-block -rotate-2">The</span>{' '}
           <span className="inline-block rotate-1 text-bitcoin-orange drop-shadow-[2px_2px_0_#040104]">
             Wizard
-          </span>{' '}
-          <span className="inline-block -rotate-1 text-wizard-blue drop-shadow-[2px_2px_0_#040104]">
-            v2
           </span>
         </h1>
         <h2 className="mt-2 text-2xl md:text-3xl font-derp text-wizard-blue drop-shadow-[2px_2px_0_#040104] rotate-1">
-          ⚡ now with a self-hosted Nexus node ⚡
+          ✨ a Magic Internet Money creation ✨
         </h2>
 
         {/* Subtitle */}
         <p className="mt-8 text-xl md:text-2xl font-caveat text-wizard-text max-w-2xl mx-auto leading-snug">
-          Autonomous market-keeper for{' '}
-          <strong>$MIM</strong> and <strong>$DOG</strong>. Captures
-          cross-venue spread, turns it into{' '}
-          <strong className="text-glitch-magenta">burned $MIM</strong>.{' '}
-          Trades through a{' '}
-          <strong className="text-wizard-blue">self-hosted Nexus node</strong>{' '}
-          that signs PSBTs internally; wraps every decision in a
-          7-round-adversarially-reviewed safety scaffold.
+          A wizard arbs the spread between Kraken and DotSwap for{' '}
+          <strong>$MIM</strong> and <strong>$DOG</strong>. The BTC it earns
+          buys $MIM. The $MIM gets{' '}
+          <strong className="text-glitch-magenta">burned</strong>.
+          The supply shrinks. The holders win.
         </p>
 
         {/* Headline numbers — these measure ecosystem service, not operator P&L. */}
@@ -121,12 +115,6 @@ function BridgeHero({ state }: { state: DashboardState }) {
             className="px-8 py-4 bg-bitcoin-orange text-wizard-black border-4 border-wizard-black rounded-[20px_5px_20px_5px] text-2xl font-derp -rotate-2 hover:rotate-2 hover:scale-110 hover:bg-magic-yellow transition-all shadow-[4px_4px_0_#040104]"
           >
             Watch The Magic
-          </a>
-          <a
-            href="/wizard"
-            className="px-8 py-4 bg-white text-wizard-black border-4 border-wizard-black rounded-[5px_20px_5px_20px] text-2xl font-derp rotate-1 hover:-rotate-1 hover:scale-110 hover:bg-wizard-cyan transition-all shadow-[4px_4px_0_#040104]"
-          >
-            Meet v1 🧙
           </a>
         </div>
       </div>
@@ -2426,11 +2414,6 @@ export default function BridgePage() {
       )}
       <BridgeHero state={state} />
       <LiveEdgeSection state={state} />
-      {state.markets && state.markets.length > 0 && (
-        <MarketsSection state={state} />
-      )}
-      <TreasurySection state={state} />
-      <NexusChannelsSection state={state} />
       <FiresSection state={state} />
       {/*
         Show BurnsSection whenever we have burn pipeline state OR a past
@@ -2440,9 +2423,6 @@ export default function BridgePage() {
       */}
       {((state.recentBurns?.length ?? 0) > 0 ||
         state.burnPipeline !== undefined) && <BurnsSection state={state} />}
-      <HowItWorksSection />
-      <SafetyScaffoldSection />
-      <RunYourOwnSection state={state} />
       <BridgeFooter />
     </main>
   );
