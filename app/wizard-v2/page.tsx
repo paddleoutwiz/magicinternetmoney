@@ -17,31 +17,22 @@ import { useEffect, useState } from 'react';
 
 function BridgeHero({ state }: { state: DashboardState }) {
   const live = state.config.live && state.config.autoSign;
-  // Convergence headline: average across tokens of how much the recent (~1h)
-  // spread is tighter than the longer-window (~24h) baseline. Negative values
-  // are good — they mean the spread shrank.
-  const summary = state.spreadHistory?.summary;
-  const deltaBps = summary ? Object.values(summary.deltaBps) : [];
-  const avgDeltaBps =
-    deltaBps.length > 0
-      ? deltaBps.reduce((s, x) => s + x, 0) / deltaBps.length
-      : null;
-  const convergenceLabel =
-    avgDeltaBps === null
-      ? 'gathering data…'
-      : avgDeltaBps <= -1
-        ? `${Math.abs(avgDeltaBps).toFixed(0)} bps tighter`
-        : avgDeltaBps >= 1
-          ? `${avgDeltaBps.toFixed(0)} bps wider`
-          : 'holding steady';
-  const convergenceColor: 'positive' | 'negative' | undefined =
-    avgDeltaBps === null
-      ? undefined
-      : avgDeltaBps <= -1
-        ? 'positive'
-        : avgDeltaBps >= 1
-          ? 'negative'
-          : undefined;
+  // Burn-headline math:
+  //   - mimBurnedLifetime: cumulative whole-token MIM burned since launch.
+  //   - lastBurn: most recent burn TX, if any.
+  //   - mimBurned30d: rolling window across recentBurns; useful while the
+  //     lifetime number is still small so we have a "this is happening
+  //     RIGHT NOW" signal.
+  const mimBurnedLifetime = state.totals.mimBurned ?? 0;
+  const burnCount = state.totals.burnCount ?? 0;
+  const recentBurns = state.recentBurns ?? [];
+  const lastBurn = recentBurns[0];
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const mimBurned30d = recentBurns
+    .filter((b) => new Date(b.at).getTime() >= thirtyDaysAgo)
+    .reduce((s, b) => s + (b.mimBurned ?? 0), 0);
+  // Last-burn freshness label. (timeAgo is imported from bridge-format.)
+  const lastBurnAgoLabel = lastBurn ? timeAgo(lastBurn.at) : null;
   return (
     <section className="relative min-h-[60vh] flex items-center justify-center px-4 py-16">
       <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/80 to-white/100 z-0" />
@@ -82,29 +73,62 @@ function BridgeHero({ state }: { state: DashboardState }) {
           The supply shrinks. The holders win.
         </p>
 
-        {/* Headline numbers — these measure ecosystem service, not operator P&L. */}
-        <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-          <Stat
-            label="$MIM Burned 🔥"
-            value={(state.totals.mimBurned ?? 0).toLocaleString()}
-            rotate="-rotate-2"
-            color="positive"
-          />
+        {/* Burn-Headline Hero — this is the product.
+            Massive cumulative MIM burned, with last-burn TX link directly
+            below. Each burn is on-chain provable. Anyone can audit. */}
+        <div className="mt-12 max-w-3xl mx-auto">
+          <div className="text-lg md:text-xl font-derp text-wizard-text uppercase tracking-wide">
+            🔥 $MIM Burned Lifetime
+          </div>
+          <div className="mt-3 text-6xl md:text-8xl font-derp text-glitch-magenta drop-shadow-[4px_4px_0_#040104] -rotate-1 leading-none">
+            {mimBurnedLifetime.toLocaleString()}
+          </div>
+          <div className="mt-2 text-base md:text-lg font-caveat text-wizard-text/80">
+            across {burnCount.toLocaleString()} burn transaction
+            {burnCount === 1 ? '' : 's'}
+            {mimBurned30d > 0 && (
+              <>
+                {' '}
+                ·{' '}
+                <span className="font-derp text-glitch-magenta">
+                  {mimBurned30d.toLocaleString()}
+                </span>{' '}
+                in the last 30 days
+              </>
+            )}
+          </div>
+          {lastBurn && (
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white/70 border-2 border-wizard-black rounded-[12px_3px_12px_3px] font-caveat text-base md:text-lg shadow-[2px_2px_0_#040104]">
+              <span>Last burn:</span>
+              <a
+                href={`https://mempool.space/tx/${lastBurn.txid}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-sm underline decoration-glitch-magenta underline-offset-2 hover:text-glitch-magenta"
+              >
+                {lastBurn.txid.slice(0, 8)}…{lastBurn.txid.slice(-6)}
+              </a>
+              <span className="text-wizard-text/60">·</span>
+              <span>
+                {lastBurn.mimBurned.toLocaleString()} $MIM ·{' '}
+                {lastBurnAgoLabel}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Secondary stats — cycles closed + bridged volume. Smaller now,
+            since the burn headline is the main number. */}
+        <div className="mt-12 grid grid-cols-2 gap-4 max-w-2xl mx-auto">
           <Stat
             label="Cycles Closed"
             value={`${state.totals.firesComplete}`}
-            rotate="rotate-1"
+            rotate="-rotate-1"
           />
           <Stat
             label="Bridged Volume"
             value={fmtUsd(state.totals.bridgedVolumeUsd ?? 0)}
-            rotate="-rotate-1"
-          />
-          <Stat
-            label="Spread (1h vs 24h)"
-            value={convergenceLabel}
-            rotate="rotate-2"
-            color={convergenceColor}
+            rotate="rotate-1"
           />
         </div>
 
