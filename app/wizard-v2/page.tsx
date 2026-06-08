@@ -2648,16 +2648,18 @@ function BridgeFooter() {
 // ---- Page ------------------------------------------------------------------
 
 /**
- * Where the runes-bridge agent publishes its live state JSON. The agent
+ * Where the wizard-v2 arb daemon publishes its live state JSON. The agent
  * runs on a separate origin so the URL is absolute. CORS is configured on
  * the agent side to allow magicinternetmoney.party and *.vercel.app.
  *
- * Override with NEXT_PUBLIC_BRIDGE_API_URL for local development or to
+ * Origin: nginx on wizard-v2-nexus (Cloudzy NYC), fronted by Cloudflare.
+ *
+ * Override with NEXT_PUBLIC_WIZARD_V2_STATE_URL for local development or to
  * point at a different deployment.
  */
 const BRIDGE_API_URL =
   process.env.NEXT_PUBLIC_WIZARD_V2_STATE_URL ||
-  'https://bridge-api.magicinternetmoney.party/api/wizard-v2/arb-state';
+  'https://v2-api.magicinternetmoney.party/api/wizard-v2/arb-state';
 
 export default function BridgePage() {
   const [state, setState] = useState<DashboardState>(MOCK_STATE);
