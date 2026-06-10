@@ -158,6 +158,330 @@ function Stat({
   );
 }
 
+// ---- SpreadVsThresholdChart -----------------------------------------------
+//
+// Ported verbatim from /wizard-v2 page. Visualizes WHEN and WHERE prices need
+// to be for the wizard to fire.
+//
+// X axis: time (last ~6h of bucketed spread data, 5-min buckets).
+// Y axis: |gross spread| in basis points (positive only; the daemon fires
+//         on EITHER direction so we plot the absolute gap).
+//
+// Two horizontal reference lines:
+//   - Fire threshold (orange dashed): the wizard fires when |spread| > this.
+//                                     = breakevenBps + edgeThresholdPct*100
+//   - Breakeven (gray dotted, lighter): where fees equal the spread.
+//
+// Two animated polylines (one per token: MIM in cyan, DOG in blue) plot the
+// recent gross spreads at each 5-min bucket.
+//
+// Markers: dots on the line at the precise (time, spread) point for each
+// fire. The viewer sees "the line crossed above the orange dashed line and
+// the wizard fired at that exact moment."
+
+function SpreadVsThresholdChart({ state }: { state: DashboardState }) {
+  const sh = state.spreadHistory;
+  if (!sh || sh.buckets.length < 2) {
+    return null;
+  }
+
+  // Filter to the last 6 hours so the chart shows recent action.
+  const cutoffMs = Date.now() - 6 * 60 * 60 * 1000;
+  const buckets = sh.buckets.filter(
+    (b) => new Date(b.at).getTime() >= cutoffMs,
+  );
+  if (buckets.length < 2) return null;
+
+  const tokens = Array.from(
+    new Set(buckets.flatMap((b) => Object.keys(b.perToken))),
+  );
+  const TOKEN_COLORS: Record<string, string> = {
+    MIM: '#00d4d4', // wizard-cyan-ish
+    DOG: '#0066cc', // wizard-blue-ish
+  };
+
+  // Compute Y-axis range. Floor at 0 (we plot |spread|); ceiling = max of
+  // (max observed, threshold, breakeven) plus 20% headroom so the lines
+  // never get cropped.
+  const breakevenBps = sh.summary.breakevenBps ?? 330;
+  const fireThresholdBps =
+    breakevenBps + (state.config.edgeThresholdPct ?? 0) * 100;
+  const allValues = buckets.flatMap((b) =>
+    Object.values(b.perToken).map((v) => Math.abs(v)),
+  );
+  const yMax =
+    Math.ceil(
+      Math.max(...allValues, breakevenBps, fireThresholdBps) * 1.2 / 50,
+    ) * 50;
+  const yMin = 0;
+  const yRange = yMax - yMin || 1;
+
+  // Chart dimensions.
+  const width = 760;
+  const height = 320;
+  const padTop = 16;
+  const padBottom = 36;
+  const padLeft = 56;
+  const padRight = 80;
+  const plotWidth = width - padLeft - padRight;
+  const plotHeight = height - padTop - padBottom;
+
+  const xForIndex = (i: number) =>
+    padLeft + (i / (buckets.length - 1)) * plotWidth;
+  const yForBps = (bps: number) =>
+    padTop + plotHeight - ((bps - yMin) / yRange) * plotHeight;
+
+  // Build polylines per token.
+  const lines: Array<{ token: string; color: string; points: string }> =
+    tokens.map((token) => {
+      const points = buckets
+        .map((b, i) => {
+          const raw = b.perToken[token];
+          if (typeof raw !== 'number') return null;
+          return `${xForIndex(i).toFixed(1)},${yForBps(
+            Math.abs(raw),
+          ).toFixed(1)}`;
+        })
+        .filter((p): p is string => p !== null)
+        .join(' ');
+      return { token, color: TOKEN_COLORS[token] ?? '#444444', points };
+    });
+
+  // Locate fires inside the visible window. Match token + nearest bucket by
+  // time so we can draw a dot at (time, observed spread).
+  const fires = (state.recentFires ?? []).filter((f) => {
+    const t = new Date(f.createdAt).getTime();
+    return (
+      t >= cutoffMs &&
+      (f.status === 'complete' ||
+        f.status === 'pending_kraken_deposit' ||
+        f.status === 'pending_dotswap')
+    );
+  });
+  const fireMarkers: Array<{
+    x: number;
+    y: number;
+    token: string;
+    color: string;
+  }> = [];
+  for (const f of fires) {
+    const t = new Date(f.createdAt).getTime();
+    // Nearest bucket index by time.
+    let bestIdx = -1;
+    let bestDelta = Infinity;
+    for (let i = 0; i < buckets.length; i++) {
+      const d = Math.abs(new Date(buckets[i]!.at).getTime() - t);
+      if (d < bestDelta) {
+        bestDelta = d;
+        bestIdx = i;
+      }
+    }
+    if (bestIdx < 0) continue;
+    const raw = buckets[bestIdx]!.perToken[f.token];
+    if (typeof raw !== 'number') continue;
+    fireMarkers.push({
+      x: xForIndex(bestIdx),
+      y: yForBps(Math.abs(raw)),
+      token: f.token,
+      color: TOKEN_COLORS[f.token] ?? '#000',
+    });
+  }
+
+  // Y-axis ticks (every 50bps).
+  const ticks: number[] = [];
+  for (let v = 0; v <= yMax; v += 50) ticks.push(v);
+
+  // X-axis time labels (first, midpoint, last).
+  const labelTimes = [
+    0,
+    Math.floor(buckets.length / 2),
+    buckets.length - 1,
+  ].map((i) => buckets[i]!.at);
+  const labelHours = labelTimes.map((ts) => {
+    const d = new Date(ts);
+    return `${d.getHours().toString().padStart(2, '0')}:${d
+      .getMinutes()
+      .toString()
+      .padStart(2, '0')}`;
+  });
+
+  return (
+    <section className="relative px-4 py-12 bg-white/85">
+      <div className="max-w-5xl mx-auto">
+        <h2 className="text-4xl md:text-5xl font-derp text-wizard-black text-center mb-2 -rotate-1">
+          The Fire Line
+        </h2>
+        <p className="text-center font-caveat text-lg md:text-xl text-wizard-text mb-2 max-w-2xl mx-auto">
+          The wizard fires when the price gap between Kraken and DotSwap
+          gets big enough to clear fees.
+        </p>
+        <p className="text-center font-caveat text-base text-wizard-beard mb-8 max-w-2xl mx-auto">
+          Above the{' '}
+          <span className="text-bitcoin-orange font-bold">
+            orange dashed line
+          </span>{' '}
+          = wizard wants to fire. The dots mark the moments it actually
+          did.
+        </p>
+
+        <div className="bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-4 md:p-6">
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            className="block w-full h-auto"
+            preserveAspectRatio="xMidYMid meet"
+          >
+            {/* Y-axis ticks + grid lines */}
+            {ticks.map((bps) => (
+              <g key={bps}>
+                <line
+                  x1={padLeft}
+                  y1={yForBps(bps)}
+                  x2={width - padRight}
+                  y2={yForBps(bps)}
+                  stroke="#e8e3d5"
+                  strokeWidth="1"
+                />
+                <text
+                  x={padLeft - 8}
+                  y={yForBps(bps) + 4}
+                  textAnchor="end"
+                  className="fill-wizard-beard"
+                  style={{ font: '12px Caveat, cursive' }}
+                >
+                  {bps} bps
+                </text>
+              </g>
+            ))}
+
+            {/* Breakeven line */}
+            <line
+              x1={padLeft}
+              y1={yForBps(breakevenBps)}
+              x2={width - padRight}
+              y2={yForBps(breakevenBps)}
+              stroke="#888"
+              strokeWidth="1.5"
+              strokeDasharray="2 4"
+            />
+            <text
+              x={width - padRight + 6}
+              y={yForBps(breakevenBps) + 4}
+              className="fill-wizard-beard"
+              style={{ font: '13px Caveat, cursive' }}
+            >
+              breakeven
+            </text>
+
+            {/* Fire-threshold line */}
+            <line
+              x1={padLeft}
+              y1={yForBps(fireThresholdBps)}
+              x2={width - padRight}
+              y2={yForBps(fireThresholdBps)}
+              stroke="#f7931a"
+              strokeWidth="2"
+              strokeDasharray="6 4"
+            />
+            <text
+              x={width - padRight + 6}
+              y={yForBps(fireThresholdBps) + 4}
+              className="fill-bitcoin-orange"
+              style={{
+                font: '14px Caveat, cursive',
+                fontWeight: 700,
+              }}
+            >
+              fire threshold
+            </text>
+
+            {/* Token lines */}
+            {lines.map(({ token, color, points }) => (
+              <polyline
+                key={token}
+                points={points}
+                fill="none"
+                stroke={color}
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+            ))}
+
+            {/* Fire markers */}
+            {fireMarkers.map((m, i) => (
+              <g key={i}>
+                <circle
+                  cx={m.x}
+                  cy={m.y}
+                  r="7"
+                  fill="#ffffff"
+                  stroke={m.color}
+                  strokeWidth="3"
+                />
+                <circle cx={m.x} cy={m.y} r="3" fill={m.color} />
+              </g>
+            ))}
+
+            {/* X-axis time labels */}
+            {labelHours.map((h, i) => {
+              const idx = [
+                0,
+                Math.floor(buckets.length / 2),
+                buckets.length - 1,
+              ][i]!;
+              const x = xForIndex(idx);
+              return (
+                <text
+                  key={i}
+                  x={x}
+                  y={height - 12}
+                  textAnchor={i === 0 ? 'start' : i === 2 ? 'end' : 'middle'}
+                  className="fill-wizard-beard"
+                  style={{ font: '12px Caveat, cursive' }}
+                >
+                  {h}
+                </text>
+              );
+            })}
+          </svg>
+
+          {/* Legend */}
+          <div className="mt-4 flex flex-wrap gap-4 justify-center items-center font-caveat text-base">
+            {lines.map(({ token, color }) => (
+              <span key={token} className="flex items-center gap-2">
+                <span
+                  className="inline-block w-4 h-1"
+                  style={{ backgroundColor: color }}
+                />
+                <strong>${token}</strong>
+              </span>
+            ))}
+            <span className="flex items-center gap-2 text-wizard-beard">
+              <span className="inline-block w-6 h-1 border-t-2 border-dashed border-bitcoin-orange" />
+              fire threshold
+            </span>
+            <span className="flex items-center gap-2 text-wizard-beard">
+              <span className="inline-block w-6 h-1 border-t-2 border-dotted border-gray-500" />
+              breakeven
+            </span>
+            <span className="flex items-center gap-2 text-wizard-beard">
+              <span className="inline-block w-3 h-3 rounded-full bg-white border-2 border-wizard-black" />
+              fired
+            </span>
+          </div>
+        </div>
+
+        <p className="text-center font-caveat text-sm text-wizard-beard mt-4 max-w-2xl mx-auto">
+          Last 6 hours, updated every 30 seconds. Fire threshold =
+          breakeven minus the operator&apos;s convergence subsidy
+          (currently{' '}
+          {Math.abs((state.config.edgeThresholdPct ?? 0) * 100).toFixed(0)}{' '}
+          bps).
+        </p>
+      </div>
+    </section>
+  );
+}
+
 // ---- Live edge cards -------------------------------------------------------
 
 function LiveEdgeSection({ state }: { state: DashboardState }) {
@@ -2166,6 +2490,7 @@ export default function BridgePage() {
       )}
       <BridgeHero state={state} />
       <LiveEdgeSection state={state} />
+      <SpreadVsThresholdChart state={state} />
       {state.markets && state.markets.length > 0 && (
         <MarketsSection state={state} />
       )}
