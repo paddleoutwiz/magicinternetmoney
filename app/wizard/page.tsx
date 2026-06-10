@@ -115,14 +115,6 @@ function BridgeHero({ state }: { state: DashboardState }) {
           >
             Watch The Magic
           </a>
-          <a
-            href={state.agent.githubRepo}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="px-8 py-4 bg-white text-wizard-black border-4 border-wizard-black rounded-[5px_20px_5px_20px] text-2xl font-derp rotate-1 hover:-rotate-1 hover:scale-110 hover:bg-wizard-cyan transition-all shadow-[4px_4px_0_#040104]"
-          >
-            Run Your Own 🧙
-          </a>
         </div>
       </div>
     </section>
@@ -2307,8 +2299,10 @@ function HowItWorksSection() {
         <div className="mt-12 max-w-2xl mx-auto bg-magic-yellow/40 border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-4 text-center">
           <p className="font-caveat text-lg text-wizard-text">
             The wizard trades its own capital.{' '}
-            <strong className="text-bitcoin-orange">Open source</strong> —{' '}
-            fork it, run your own.
+            <strong className="text-bitcoin-orange">
+              v2 will be open-sourced
+            </strong>{' '}
+            alongside the Nexus channel-mode launch.
           </p>
         </div>
       </div>
@@ -2316,55 +2310,50 @@ function HowItWorksSection() {
   );
 }
 
-// ---- Run your own ----------------------------------------------------------
+// ---- What's next (Phase 2 teaser) -----------------------------------------
 
-function RunYourOwnSection({ state }: { state: DashboardState }) {
+function RunYourOwnSection({ state: _state }: { state: DashboardState }) {
   return (
     <section className="relative px-4 py-16 bg-gradient-to-b from-white/90 to-white">
       <div className="max-w-4xl mx-auto text-center">
         <h2 className="text-4xl md:text-6xl font-derp text-wizard-black mb-4 -rotate-1">
-          Run Your Own Wizard
+          What's Next
         </h2>
-        <p className="font-caveat text-xl text-wizard-text mb-8">
-          MIT. TypeScript. Single repo. Bring your own keys.
+        <p className="font-caveat text-xl text-wizard-text mb-10 max-w-2xl mx-auto">
+          Phase Two: the Nexus protocol. Bitcoin state channels that
+          compress round-trip fees from <strong>200 basis points</strong>{' '}
+          to about <strong>one</strong>. Same arb logic, fifty times more
+          burns per dollar of capital.
         </p>
 
-        <div className="bg-wizard-black text-wizard-highlight font-mono text-sm md:text-base p-6 rounded-[14px_4px_14px_4px] border-3 border-wizard-black shadow-[4px_4px_0_#040104] text-left max-w-2xl mx-auto -rotate-[0.3deg]">
-          <div className="text-wizard-beard mb-2"># install Kraken CLI</div>
-          <div className="break-all">
-            curl --proto '=https' --tlsv1.2 -LsSf
-            https://github.com/krakenfx/kraken-cli/releases/latest/download/kraken-cli-installer.sh
-            | sh
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+          <div className="bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-6 -rotate-1">
+            <div className="text-4xl mb-2">🔥</div>
+            <h3 className="font-derp text-xl mb-2">More burns</h3>
+            <p className="font-caveat text-base text-wizard-text">
+              Sub-cent settlement means every cycle's profit becomes a
+              burn. Visible on chain, every time.
+            </p>
           </div>
-          <div className="text-wizard-beard mt-4 mb-2">
-            # clone + run runes-bridge
+          <div className="bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-6 rotate-1">
+            <div className="text-4xl mb-2">⚡</div>
+            <h3 className="font-derp text-xl mb-2">Channel-fast</h3>
+            <p className="font-caveat text-base text-wizard-text">
+              Off-chain commitments settle in milliseconds. Tighter
+              quotes, smaller capital, more turns per day.
+            </p>
           </div>
-          <div>git clone {state.agent.githubRepo}</div>
-          <div>cd runes-bridge && pnpm install</div>
-          <div>pnpm dev preflight</div>
-          <div>pnpm dev daemon --tokens MIM,DOG --auto-sign</div>
+          <div className="bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-6 -rotate-1">
+            <div className="text-4xl mb-2">🛠️</div>
+            <h3 className="font-derp text-xl mb-2">Open source</h3>
+            <p className="font-caveat text-base text-wizard-text">
+              v2 will be released open-source when channel-mode goes
+              live. Fork it. Run your own wizard.
+            </p>
+          </div>
         </div>
 
-        <div className="mt-10 flex flex-wrap justify-center gap-4">
-          <a
-            href={state.agent.githubRepo}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="px-8 py-4 bg-bitcoin-orange text-wizard-black border-4 border-wizard-black rounded-[20px_5px_20px_5px] text-2xl font-derp -rotate-2 hover:rotate-2 hover:scale-110 hover:bg-magic-yellow transition-all shadow-[4px_4px_0_#040104]"
-          >
-            View on GitHub
-          </a>
-          <a
-            href="https://github.com/krakenfx/kraken-cli"
-            target="_blank"
-            rel="noreferrer noopener"
-            className="px-8 py-4 bg-white text-wizard-black border-4 border-wizard-black rounded-[5px_20px_5px_20px] text-2xl font-derp rotate-1 hover:-rotate-1 hover:scale-110 hover:bg-wizard-cyan transition-all shadow-[4px_4px_0_#040104]"
-          >
-            Get Kraken CLI
-          </a>
-        </div>
-
-        <p className="mt-8 font-caveat text-base text-wizard-beard max-w-xl mx-auto">
+        <p className="mt-10 font-caveat text-base text-wizard-beard max-w-xl mx-auto">
           Built with Kraken CLI for the{' '}
           <a
             className="underline hover:text-bitcoin-orange"
@@ -2394,15 +2383,6 @@ function BridgeFooter() {
       <div className="mt-4 flex justify-center gap-4 font-caveat text-base">
         <a className="hover:text-bitcoin-orange" href="https://magicinternetmoney.party">
           ← magicinternetmoney.party
-        </a>
-        <span className="text-wizard-beard">·</span>
-        <a
-          className="hover:text-bitcoin-orange"
-          href="https://github.com/paddleoutwiz/runes-bridge"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          GitHub
         </a>
         <span className="text-wizard-beard">·</span>
         <a
