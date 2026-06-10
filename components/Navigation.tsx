@@ -41,6 +41,7 @@ export default function Navigation() {
     { href: '#why', label: 'Why MIM?' },
     { href: '#wizards', label: 'Wizards' },
     { href: 'https://games.magicinternetmoney.party', label: 'Games', external: true },
+    { href: '/wizard', label: '🔥 Burns', external: true },
   ]
 
   // Desktop navigation
