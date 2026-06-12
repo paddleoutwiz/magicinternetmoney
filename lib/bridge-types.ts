@@ -133,8 +133,22 @@ export interface DashboardState {
       stdBps?: Record<string, number>;
       /** Minutes within the retained window the spread was wider than breakeven. */
       minutesAboveBreakeven?: Record<string, number>;
-      /** Breakeven threshold (bps) used for minutesAboveBreakeven. */
+      /**
+       * Dominant-mode breakeven (bps). Equals channelBreakevenBps when any
+       * channel has spendable capacity, else l1BreakevenBps.
+       */
       breakevenBps?: number;
+      /**
+       * Channel-mode breakeven (bps). Fires routed through a Bitcoin Channel
+       * skip DotSwap AMM + slippage; only Kraken taker fee survives.
+       * Typical ~26 bps.
+       */
+      channelBreakevenBps?: number;
+      /**
+       * L1-mode breakeven (bps). Full fee stack: DotSwap + Kraken taker +
+       * slippage + amortized BTC tx fee. Typical ~331 bps.
+       */
+      l1BreakevenBps?: number;
     };
   };
   /**
@@ -366,7 +380,9 @@ export const MOCK_STATE: DashboardState = {
       deltaBps: { MIM: 23, DOG: 246 },
       stdBps: { MIM: 153, DOG: 96 },
       minutesAboveBreakeven: { MIM: 1075, DOG: 174 },
-      breakevenBps: 330,
+      breakevenBps: 26,
+      channelBreakevenBps: 26,
+      l1BreakevenBps: 331,
     },
   },
   markets: [

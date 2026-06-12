@@ -631,17 +631,26 @@ function Sparkline({
 // Y axis: |gross spread| in basis points (positive only; the daemon fires
 //         on EITHER direction so we plot the absolute gap).
 //
-// Two horizontal reference lines:
-//   - Fire threshold (orange dashed): the wizard fires when |spread| > this.
-//                                     = breakevenBps + edgeThresholdPct*100
-//   - Breakeven (gray dotted, lighter): where fees equal the spread.
+// Two horizontal reference lines, one per routing mode:
+//   - Channel fire line (cyan dashed, ~46 bps):
+//       Bitcoin-channel mode skips DotSwap's AMM fee and slippage entirely,
+//       so the only cost is the Kraken taker fee. Tiny threshold = fires
+//       *often*. Live now.
+//   - L1 fire line (orange dashed, ~351 bps):
+//       For trades too large for channel capacity, we fall through to L1
+//       and eat the full fee stack (DotSwap + slippage + BTC tx fee).
+//       Bigger threshold = fires *rarely*. This is the v1-only world.
+//
+// Both thresholds = breakevenBps + edgeThresholdPct*100. The viewer sees
+// the dramatic visual gap between "with channels" and "without" — and why
+// the wizard's economics changed when we activated channels with Nexus.
 //
 // Two animated polylines (one per token: MIM in cyan, DOG in blue) plot the
 // recent gross spreads at each 5-min bucket.
 //
 // Markers: dots on the line at the precise (time, spread) point for each
-// fire. The viewer sees "the line crossed above the orange dashed line and
-// the wizard fired at that exact moment."
+// fire. The viewer sees "the line crossed above the dashed line and the
+// wizard fired at that exact moment."
 
 function SpreadVsThresholdChart({ state }: { state: DashboardState }) {
   const sh = state.spreadHistory;
@@ -664,18 +673,26 @@ function SpreadVsThresholdChart({ state }: { state: DashboardState }) {
     DOG: '#0066cc', // wizard-blue-ish
   };
 
+  // Two fire thresholds: channel-mode (small; live now) and L1-mode (large;
+  // legacy path). Read from spreadHistory.summary which now plumbs both
+  // values from the daemon's derived fee-config breakevens. Each = its
+  // respective breakeven + edgeThresholdPct (the operator's profit margin
+  // above zero net edge).
+  const channelBreakevenBps = sh.summary.channelBreakevenBps ?? 26;
+  const l1BreakevenBps = sh.summary.l1BreakevenBps ?? 331;
+  const edgeThresholdBps = (state.config.edgeThresholdPct ?? 0) * 100;
+  const channelFireBps = channelBreakevenBps + edgeThresholdBps;
+  const l1FireBps = l1BreakevenBps + edgeThresholdBps;
+
   // Compute Y-axis range. Floor at 0 (we plot |spread|); ceiling = max of
-  // (max observed, threshold, breakeven) plus 20% headroom so the lines
-  // never get cropped.
-  const breakevenBps = sh.summary.breakevenBps ?? 330;
-  const fireThresholdBps =
-    breakevenBps + (state.config.edgeThresholdPct ?? 0) * 100;
+  // (max observed, both fire lines) plus 20% headroom so the lines never
+  // get cropped.
   const allValues = buckets.flatMap((b) =>
     Object.values(b.perToken).map((v) => Math.abs(v)),
   );
   const yMax =
     Math.ceil(
-      Math.max(...allValues, breakevenBps, fireThresholdBps) * 1.2 / 50,
+      Math.max(...allValues, channelFireBps, l1FireBps) * 1.2 / 50,
     ) * 50;
   const yMin = 0;
   const yRange = yMax - yMin || 1;
@@ -770,8 +787,11 @@ function SpreadVsThresholdChart({ state }: { state: DashboardState }) {
           gets big enough to clear fees.
         </p>
         <p className="text-center font-caveat text-base text-wizard-beard mb-8 max-w-2xl mx-auto">
-          Above the <span className="text-bitcoin-orange font-bold">orange dashed line</span> = wizard wants to fire.
-          The dots mark the moments it actually did.
+          Two thresholds. Above the{' '}
+          <span style={{ color: '#00d4d4' }} className="font-bold">cyan line</span>{' '}
+          = channel mode fires (cheap). Above the{' '}
+          <span className="text-bitcoin-orange font-bold">orange line</span>{' '}
+          = even L1 fires (expensive). The dots mark moments it actually did.
         </p>
 
         <div className="bg-white border-3 border-wizard-black rounded-[14px_4px_14px_4px] shadow-[3px_3px_0_#040104] p-4 md:p-6">
@@ -803,45 +823,51 @@ function SpreadVsThresholdChart({ state }: { state: DashboardState }) {
               </g>
             ))}
 
-            {/* Breakeven line */}
+            {/* Channel-mode fire line — the dominant threshold now that
+                we route through Nexus channels. ~46 bps. */}
             <line
               x1={padLeft}
-              y1={yForBps(breakevenBps)}
+              y1={yForBps(channelFireBps)}
               x2={width - padRight}
-              y2={yForBps(breakevenBps)}
-              stroke="#888"
-              strokeWidth="1.5"
-              strokeDasharray="2 4"
+              y2={yForBps(channelFireBps)}
+              stroke="#00d4d4"
+              strokeWidth="2"
+              strokeDasharray="6 4"
             />
             <text
               x={width - padRight + 6}
-              y={yForBps(breakevenBps) + 4}
-              className="fill-wizard-beard"
-              style={{ font: '13px Caveat, cursive' }}
+              y={yForBps(channelFireBps) + 4}
+              style={{
+                font: '14px Caveat, cursive',
+                fontWeight: 700,
+                fill: '#00d4d4',
+              }}
             >
-              breakeven
+              channel fire
             </text>
 
-            {/* Fire-threshold line */}
+            {/* L1-mode fire line — legacy fallback when trades exceed
+                channel capacity. ~351 bps. The dramatic gap from the
+                channel line is the whole point of v2. */}
             <line
               x1={padLeft}
-              y1={yForBps(fireThresholdBps)}
+              y1={yForBps(l1FireBps)}
               x2={width - padRight}
-              y2={yForBps(fireThresholdBps)}
+              y2={yForBps(l1FireBps)}
               stroke="#f7931a"
               strokeWidth="2"
               strokeDasharray="6 4"
             />
             <text
               x={width - padRight + 6}
-              y={yForBps(fireThresholdBps) + 4}
+              y={yForBps(l1FireBps) + 4}
               className="fill-bitcoin-orange"
               style={{
                 font: '14px Caveat, cursive',
                 fontWeight: 700,
               }}
             >
-              fire threshold
+              L1 fire
             </text>
 
             {/* Token lines */}
@@ -902,12 +928,15 @@ function SpreadVsThresholdChart({ state }: { state: DashboardState }) {
               </span>
             ))}
             <span className="flex items-center gap-2 text-wizard-beard">
-              <span className="inline-block w-6 h-1 border-t-2 border-dashed border-bitcoin-orange" />
-              fire threshold
+              <span
+                className="inline-block w-6 h-1 border-t-2 border-dashed"
+                style={{ borderColor: '#00d4d4' }}
+              />
+              channel fire ({channelFireBps.toFixed(0)} bps)
             </span>
             <span className="flex items-center gap-2 text-wizard-beard">
-              <span className="inline-block w-6 h-1 border-t-2 border-dotted border-gray-500" />
-              breakeven
+              <span className="inline-block w-6 h-1 border-t-2 border-dashed border-bitcoin-orange" />
+              L1 fire ({l1FireBps.toFixed(0)} bps)
             </span>
             <span className="flex items-center gap-2 text-wizard-beard">
               <span className="inline-block w-3 h-3 rounded-full bg-white border-2 border-wizard-black" />
@@ -917,9 +946,10 @@ function SpreadVsThresholdChart({ state }: { state: DashboardState }) {
         </div>
 
         <p className="text-center font-caveat text-sm text-wizard-beard mt-4 max-w-2xl mx-auto">
-          Last 6 hours, updated every 30 seconds.
-          Fire threshold = breakeven minus the operator&apos;s convergence
-          subsidy (currently {Math.abs((state.config.edgeThresholdPct ?? 0) * 100).toFixed(0)} bps).
+          Last 6 hours, updated every 30 seconds. Channel fires skip the
+          DotSwap AMM fee entirely thanks to the live Nexus integration —
+          that&apos;s why the cyan line sits {(l1FireBps - channelFireBps).toFixed(0)} bps below the orange one.
+          Both = breakeven + operator target ({Math.abs(edgeThresholdBps).toFixed(0)} bps).
         </p>
       </div>
     </section>
